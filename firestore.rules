@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email']) &&
+             data.uid is string && data.displayName is string && data.email is string &&
+             (!('favorites' in data) || data.favorites is list) &&
+             (!('rating' in data) || data.rating is number) &&
+             (!('ratingCount' in data) || data.ratingCount is number);
+    }
+    function isValidListing(data) {
+      return data.keys().hasAll(['sellerId', 'title', 'price', 'category']) &&
+             data.sellerId is string && data.title is string &&
+             data.price is number && data.category is string &&
+             (!('status' in data) || data.status is string) &&
+             (!('originalPrice' in data) || data.originalPrice is number) &&
+             (!('condition' in data) || data.condition is string) &&
+             (!('city' in data) || data.city is string);
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
+                      request.resource.data.uid == resource.data.uid;
+    }
+
+    // Listings
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidListing(request.resource.data) &&
+                      request.resource.data.sellerId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.sellerId == request.auth.uid &&
+                      isValidListing(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.sellerId == request.auth.uid;
+    }
+
+    // Reports
+    match /reports/{reportId} {
+      allow create: if isAuthenticated();
+    }
+
+    // Chats
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      allow create: if isAuthenticated() && request.auth.uid in request.resource.data.participants;
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.participants;
+      
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid &&
+                        request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+    }
+  }
+}

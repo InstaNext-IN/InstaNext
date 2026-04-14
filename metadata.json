@@ -1,0 +1,5 @@
+{
+  "name": "Insta Next.in",
+  "description": "A secure full-stack marketplace for buying and selling second-hand goods with verified onboarding and safe chat.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}
