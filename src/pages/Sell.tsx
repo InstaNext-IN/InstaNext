@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { GoogleGenAI } from "@google/genai";
 import { OperationType, handleFirestoreError } from "../firebase";
 import { removeBackground } from "@imgly/background-removal";
+import LocationSelector from "../components/LocationSelector";
 
 let aiInstance: GoogleGenAI | null = null;
 const getAI = () => {
@@ -37,8 +38,10 @@ export default function Sell() {
     price: "",
     category: "Electronics",
     condition: "Used",
+    state: "",
+    district: "",
     city: "",
-    address: ""
+    area: ""
   });
 
   const compressImage = async (blob: Blob): Promise<string> => {
@@ -163,6 +166,11 @@ export default function Sell() {
       return;
     }
 
+    if (!formData.state || !formData.district || !formData.city || !formData.area) {
+      setError("Please complete all location fields.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -173,12 +181,15 @@ export default function Sell() {
         price: Number(formData.price),
         category: formData.category,
         condition: formData.condition,
+        state: formData.state,
+        district: formData.district,
         city: formData.city.trim(),
+        area: formData.area.trim(),
         images: [preview],
         location: {
           lat: 0,
           lng: 0,
-          address: formData.address
+          address: `${formData.area}, ${formData.city}, ${formData.district}, ${formData.state}`
         },
         isVerified: user.isVerified,
         status: 'active',
@@ -316,29 +327,14 @@ export default function Sell() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">City</label>
-            <input
-              type="text"
-              required
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-              placeholder="e.g. Mumbai"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">Full Address / Neighborhood</label>
-            <input
-              type="text"
-              required
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-              placeholder="e.g. Bandra West"
-            />
-          </div>
+        <div className="space-y-2">
+          <LocationSelector
+            state={formData.state} setState={(val) => setFormData(p => ({ ...p, state: val }))}
+            district={formData.district} setDistrict={(val) => setFormData(p => ({ ...p, district: val }))}
+            city={formData.city} setCity={(val) => setFormData(p => ({ ...p, city: val }))}
+            area={formData.area} setArea={(val) => setFormData(p => ({ ...p, area: val }))}
+            standalone={true}
+          />
         </div>
 
         <button

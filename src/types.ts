@@ -28,7 +28,10 @@ export interface Listing {
   isVerified: boolean;
   status?: 'active' | 'sold' | 'deleted';
   condition?: string;
+  state?: string;
+  district?: string;
   city?: string;
+  area?: string;
   createdAt: string;
 }
 

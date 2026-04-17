@@ -5,8 +5,9 @@ import { Listing } from "../types";
 import ListingCard from "../components/ListingCard";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
-import { Search, LayoutGrid, Smartphone, Sofa, Car, Book, Shirt, Package, MapPin, Filter, ArrowUpDown } from "lucide-react";
+import { Search, LayoutGrid, Smartphone, Sofa, Car, Book, Shirt, Package, Filter, ArrowUpDown } from "lucide-react";
 import { OperationType, handleFirestoreError } from "../firebase";
+import LocationSelector from "../components/LocationSelector";
 
 export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -14,7 +15,10 @@ export default function Home() {
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q")?.toLowerCase() || "";
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [city, setCity] = useState("All");
+  const [filterState, setFilterState] = useState("");
+  const [filterDistrict, setFilterDistrict] = useState("");
+  const [filterCity, setFilterCity] = useState("");
+  const [filterArea, setFilterArea] = useState("");
   const [condition, setCondition] = useState("All");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -31,17 +35,10 @@ export default function Home() {
     { name: "Other", icon: Package },
   ];
 
-  // Derive unique cities from listings for the dropdown
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-
   useEffect(() => {
     const qListing = query(collection(db, "listings"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(qListing, (snapshot) => {
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
-      
-      // Extract unique cities
-      const cities = Array.from(new Set(data.map(l => l.city).filter(Boolean))) as string[];
-      setAvailableCities(cities.sort());
       
       // Filter out deleted
       data = data.filter(l => l.status !== 'deleted');
@@ -51,9 +48,18 @@ export default function Home() {
         data = data.filter(l => l.category === selectedCategory);
       }
       
-      // Filter by city
-      if (city !== "All") {
-        data = data.filter(l => l.city?.toLowerCase() === city.toLowerCase());
+      // Filter by Location
+      if (filterState) {
+        data = data.filter(l => l.state === filterState);
+      }
+      if (filterDistrict) {
+        data = data.filter(l => l.district === filterDistrict);
+      }
+      if (filterCity) {
+        data = data.filter(l => l.city?.toLowerCase().includes(filterCity.toLowerCase()));
+      }
+      if (filterArea) {
+        data = data.filter(l => l.area?.toLowerCase().includes(filterArea.toLowerCase()));
       }
 
       // Filter by condition
@@ -91,7 +97,7 @@ export default function Home() {
     });
 
     return () => unsubscribe();
-  }, [q, selectedCategory, city, condition, minPrice, maxPrice, sortBy]);
+  }, [q, selectedCategory, filterState, filterDistrict, filterCity, filterArea, condition, minPrice, maxPrice, sortBy]);
 
   return (
     <motion.div
@@ -131,26 +137,12 @@ export default function Home() {
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-200 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-4 flex-1">
-            <div className="relative flex-1 max-w-xs">
-              <MapPin className="absolute left-3 top-3 w-5 h-5 text-stone-400" />
-              <select
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none font-medium text-stone-700"
-              >
-                <option value="All">All Cities</option>
-                {availableCities.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            
             <button 
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${showFilters ? 'bg-teal-100 text-teal-800' : 'bg-stone-50 text-stone-700 border border-stone-200 hover:bg-stone-100'}`}
             >
               <Filter className="w-5 h-5" />
-              <span>Filters</span>
+              <span>Location & Filters</span>
             </button>
           </div>
 
@@ -172,40 +164,52 @@ export default function Home() {
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
-            className="pt-4 border-t border-stone-100 grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="pt-4 border-t border-stone-100 space-y-6"
           >
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-stone-500">Condition</label>
-              <select
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700"
-              >
-                <option value="All">Any Condition</option>
-                <option value="Brand New">Brand New</option>
-                <option value="Like New">Like New</option>
-                <option value="Used">Used</option>
-                <option value="Heavily Used">Heavily Used</option>
-              </select>
+            <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
+              <h3 className="text-sm font-bold text-stone-700 mb-4 tracking-wider uppercase">Location Filter</h3>
+              <LocationSelector
+                state={filterState} setState={setFilterState}
+                district={filterDistrict} setDistrict={setFilterDistrict}
+                city={filterCity} setCity={setFilterCity}
+                area={filterArea} setArea={setFilterArea}
+              />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-stone-500">Price Range (₹)</label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
-                <span className="text-stone-400 font-bold">to</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                />
+          
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-500">Condition</label>
+                <select
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700"
+                >
+                  <option value="All">Any Condition</option>
+                  <option value="Brand New">Brand New</option>
+                  <option value="Like New">Like New</option>
+                  <option value="Used">Used</option>
+                  <option value="Heavily Used">Heavily Used</option>
+                </select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-stone-500">Price Range (₹)</label>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <span className="text-stone-400 font-bold">to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
               </div>
             </div>
           </motion.div>

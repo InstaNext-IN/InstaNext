@@ -131,8 +131,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             </div>
           )}
           <div className="flex items-center text-stone-400 text-sm">
-            <MapPin className="w-4 h-4 mr-1" />
-            <span className="truncate">{listing.city ? `${listing.location.address}, ${listing.city}` : listing.location.address}</span>
+            <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">
+              {listing.area ? `${listing.area}, ${listing.city}` : listing.city ? `${listing.location.address}, ${listing.city}` : listing.location.address}
+            </span>
           </div>
           <p className="text-stone-500 text-sm line-clamp-2 flex-1">{listing.description}</p>
         </div>
