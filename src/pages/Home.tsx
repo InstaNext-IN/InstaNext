@@ -24,6 +24,7 @@ export default function Home() {
   const [maxPrice, setMaxPrice] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [showCategories, setShowCategories] = useState(false);
 
   const categories = [
     { name: "All", icon: LayoutGrid },
@@ -116,22 +117,43 @@ export default function Home() {
         </p>
       </section>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4">
-        {categories.map(cat => (
+      {!showCategories ? (
+        <div className="flex justify-center md:justify-start">
           <button
-            key={cat.name}
-            onClick={() => setSelectedCategory(cat.name)}
-            className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all ${
-              selectedCategory === cat.name
-                ? "bg-teal-900 text-white shadow-lg scale-105"
-                : "bg-white text-stone-600 hover:bg-stone-50 border border-stone-200 hover:border-teal-500"
-            }`}
+            onClick={() => setShowCategories(true)}
+            className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl transition-all bg-teal-900 text-white shadow-lg scale-105 w-24 sm:w-32"
           >
-            <cat.icon className={`w-8 h-8 mb-2 ${selectedCategory === cat.name ? 'text-gold-400' : 'text-teal-600'}`} />
-            <span className="text-sm font-bold">{cat.name}</span>
+            <LayoutGrid className="mb-2 text-gold-400 w-8 h-8" />
+            <span className="text-sm font-bold text-center leading-tight">
+              {selectedCategory === "All" ? "All" : selectedCategory}
+            </span>
           </button>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-4"
+        >
+          {categories.map(cat => (
+            <button
+              key={cat.name}
+              onClick={() => {
+                setSelectedCategory(cat.name);
+                setShowCategories(false);
+              }}
+              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl transition-all ${
+                selectedCategory === cat.name
+                  ? "bg-teal-900 text-white shadow-lg scale-105"
+                  : "bg-white text-stone-600 hover:bg-stone-50 border border-stone-200 hover:border-teal-500"
+              }`}
+            >
+              <cat.icon className={`mb-2 ${selectedCategory === cat.name ? 'text-gold-400' : 'text-teal-600'} ${cat.name === 'All' ? 'w-8 h-8' : 'w-6 h-6 sm:w-8 sm:h-8'}`} />
+              <span className={`${cat.name === 'All' ? 'text-sm' : 'text-xs sm:text-sm'} font-bold text-center leading-tight`}>{cat.name}</span>
+            </button>
+          ))}
+        </motion.div>
+      )}
 
       {/* Filters Bar */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-200 space-y-4">
