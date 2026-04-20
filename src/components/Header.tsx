@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Plus, User as UserIcon, LogIn, LogOut, MessageCircle } from "lucide-react";
 import { useAuth } from "../App";
-import { signInWithGoogle, auth } from "../firebase";
+import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -65,7 +65,7 @@ export default function Header() {
               </>
             ) : (
               <button
-                onClick={signInWithGoogle}
+                onClick={() => setShowLoginModal(true)}
                 className="flex items-center space-x-2 bg-white text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-100 transition-colors shadow-md"
               >
                 <LogIn className="w-5 h-5" />

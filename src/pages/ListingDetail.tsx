@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, where, limit } from "firebase/firestore";
-import { db, signInWithGoogle } from "../firebase";
+import { db } from "../firebase";
 import { Listing, User } from "../types";
 import { useAuth } from "../App";
 import { BadgeCheck, MapPin, MessageCircle, Shield, AlertTriangle, Loader2, Share2, Flag, Heart, TrendingDown, Star, Tag } from "lucide-react";
@@ -12,7 +12,7 @@ import ListingCard from "../components/ListingCard";
 
 export default function ListingDetail() {
   const { id } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setShowLoginModal } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ export default function ListingDetail() {
 
   const toggleFavorite = async () => {
     if (!currentUser || !listing) {
-      await signInWithGoogle();
+      setShowLoginModal(true);
       return;
     }
     setFavLoading(true);
@@ -64,7 +64,7 @@ export default function ListingDetail() {
 
   const handleReport = async () => {
     if (!currentUser) {
-      await signInWithGoogle();
+      setShowLoginModal(true);
       return;
     }
     const reason = prompt("Why are you reporting this listing?");
@@ -377,7 +377,7 @@ export default function ListingDetail() {
             <button
               onClick={() => {
                 if (!currentUser) {
-                  signInWithGoogle().then(() => startChat());
+                  setShowLoginModal(true);
                 } else {
                   startChat();
                 }

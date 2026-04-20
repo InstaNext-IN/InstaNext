@@ -16,15 +16,25 @@ import { motion, AnimatePresence } from "framer-motion";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  showLoginModal: boolean;
+  setShowLoginModal: (show: boolean) => void;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+  user: null, 
+  loading: true,
+  showLoginModal: false,
+  setShowLoginModal: () => {}
+});
 
 export const useAuth = () => useContext(AuthContext);
+
+import LoginModal from "./components/LoginModal";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -59,7 +69,7 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal }}>
       <Router>
         <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
           <Header />
@@ -75,6 +85,7 @@ export default function App() {
               </Routes>
             </AnimatePresence>
           </main>
+          <LoginModal />
         </div>
       </Router>
     </AuthContext.Provider>

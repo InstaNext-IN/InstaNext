@@ -4,11 +4,11 @@ import { Listing } from "../types";
 import { BadgeCheck, MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../App";
-import { db, auth, signInWithGoogle, OperationType, handleFirestoreError } from "../firebase";
+import { db, auth, OperationType, handleFirestoreError } from "../firebase";
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 
 export default function ListingCard({ listing }: { listing: Listing }) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setShowLoginModal } = useAuth();
   const navigate = useNavigate();
   const [chatLoading, setChatLoading] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
@@ -19,7 +19,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     e.preventDefault();
     e.stopPropagation();
     if (!currentUser) {
-      await signInWithGoogle();
+      setShowLoginModal(true);
       return;
     }
     
@@ -63,7 +63,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     };
 
     if (!currentUser) {
-      signInWithGoogle().then(() => initiate());
+      setShowLoginModal(true);
     } else {
       initiate();
     }

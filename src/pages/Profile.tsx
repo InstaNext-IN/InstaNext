@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../App";
 import { auth, db, OperationType, handleFirestoreError } from "../firebase";
 import { doc, updateDoc, collection, query, where, onSnapshot, getDoc } from "firebase/firestore";
-import { RecaptchaVerifier, linkWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { BadgeCheck, Phone, ShieldCheck, Loader2, User as UserIcon, MessageSquare, ArrowRight, Package, Heart, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chat, Listing, User } from "../types";
@@ -101,58 +100,6 @@ export default function Profile() {
     fetchSaved();
   }, [user?.favorites]);
 
-  const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-      });
-    }
-  };
-
-  const handleSendOTP = async () => {
-    if (!phone) return;
-    setVerifying(true);
-    setError(null);
-    try {
-      setupRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
-      // Ensure phone has country code. Default to +91 for India if not provided.
-      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-      const confirmation = await linkWithPhoneNumber(auth.currentUser!, formattedPhone, appVerifier);
-      setConfirmationResult(confirmation);
-      setStep(2);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to send OTP. Ensure phone number includes country code (e.g. +91).");
-      if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
-        (window as any).recaptchaVerifier = null;
-      }
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleVerifyOTP = async () => {
-    if (!otp || !user || !confirmationResult) return;
-    setVerifying(true);
-    setError(null);
-
-    try {
-      await confirmationResult.confirm(otp);
-      await updateDoc(doc(db, "users", user.uid), {
-        isVerified: true,
-        phoneNumber: phone
-      });
-      setStep(3); // Success
-    } catch (err: any) {
-      console.error(err);
-      setError("Invalid OTP or verification failed. Try again.");
-    } finally {
-      setVerifying(false);
-    }
-  };
-
   if (!user) return null;
 
   const tabs = [
@@ -213,86 +160,6 @@ export default function Profile() {
                 <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
-
-            {!user.isVerified && (
-              <div className="bg-teal-900 text-white rounded-3xl p-8 shadow-2xl space-y-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-gold-500 rounded-2xl">
-                    <ShieldCheck className="w-8 h-8 text-teal-900" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Get Verified</h2>
-                    <p className="text-teal-200">Verified users get 3x more sales and trust.</p>
-                  </div>
-                </div>
-
-                {step === 1 && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold uppercase tracking-widest text-teal-300">Phone Number</label>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 w-5 h-5 text-teal-400" />
-                        <input
-                          type="tel"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="+91 98765 43210"
-                          className="w-full bg-teal-800 border-none rounded-2xl py-4 pl-12 pr-4 text-white focus:ring-2 focus:ring-gold-500 outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                    <div id="recaptcha-container"></div>
-                    <button
-                      onClick={handleSendOTP}
-                      disabled={verifying || !phone}
-                      className="w-full bg-gold-500 text-teal-900 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-gold-600 transition-all shadow-xl disabled:opacity-50"
-                    >
-                      {verifying ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : "Send OTP"}
-                    </button>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold uppercase tracking-widest text-teal-300">Enter 6-Digit OTP</label>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="123456"
-                        className="w-full bg-teal-800 border-none rounded-2xl py-4 px-6 text-white text-center text-2xl font-bold tracking-[1em] focus:ring-2 focus:ring-gold-500 outline-none transition-all"
-                      />
-                    </div>
-                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-                    <button
-                      onClick={handleVerifyOTP}
-                      disabled={verifying || otp.length !== 6}
-                      className="w-full bg-gold-500 text-teal-900 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-gold-600 transition-all shadow-xl disabled:opacity-50"
-                    >
-                      {verifying ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : "Verify & Upgrade"}
-                    </button>
-                    <button onClick={() => setStep(1)} className="w-full text-teal-300 text-sm hover:underline">Change Phone Number</button>
-                  </div>
-                )}
-
-                {step === 3 && (
-                  <div className="text-center py-8 space-y-4">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="w-20 h-20 bg-gold-500 rounded-full flex items-center justify-center mx-auto"
-                    >
-                      <BadgeCheck className="w-12 h-12 text-teal-900" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold">You're Verified!</h3>
-                    <p className="text-teal-200">Your profile now features the gold badge of trust.</p>
-                  </div>
-                )}
-              </div>
-            )}
           </motion.div>
         )}
 
