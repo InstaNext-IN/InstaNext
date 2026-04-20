@@ -292,6 +292,7 @@ export default function Sell() {
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
             >
+              <option>Mobiles</option>
               <option>Electronics</option>
               <option>Furniture</option>
               <option>Vehicles</option>

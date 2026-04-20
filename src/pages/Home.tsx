@@ -5,7 +5,7 @@ import { Listing } from "../types";
 import ListingCard from "../components/ListingCard";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
-import { Search, LayoutGrid, Smartphone, Sofa, Car, Book, Shirt, Package, Filter, ArrowUpDown } from "lucide-react";
+import { Search, LayoutGrid, Smartphone, Monitor, Sofa, Car, Book, Shirt, Package, Filter, ArrowUpDown } from "lucide-react";
 import { OperationType, handleFirestoreError } from "../firebase";
 import LocationSelector from "../components/LocationSelector";
 
@@ -28,7 +28,8 @@ export default function Home() {
 
   const categories = [
     { name: "All", icon: LayoutGrid },
-    { name: "Electronics", icon: Smartphone },
+    { name: "Mobiles", icon: Smartphone },
+    { name: "Electronics", icon: Monitor },
     { name: "Furniture", icon: Sofa },
     { name: "Vehicles", icon: Car },
     { name: "Books", icon: Book },
