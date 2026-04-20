@@ -24,7 +24,7 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-gold-500 rounded-full flex items-center justify-center shadow-inner">
-              <span className="text-teal-900 font-bold text-xl italic">IN</span>
+              <span className="text-teal-900 font-bold text-xl italic">.IN</span>
             </div>
             <span className="text-2xl font-bold tracking-tight hidden sm:block">
               Insta <span className="text-gold-500">Next.in</span>
