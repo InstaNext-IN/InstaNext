@@ -18,13 +18,17 @@ interface AuthContextType {
   loading: boolean;
   showLoginModal: boolean;
   setShowLoginModal: (show: boolean) => void;
+  deferredPrompt: any;
+  installApp: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
   user: null, 
   loading: true,
   showLoginModal: false,
-  setShowLoginModal: () => {}
+  setShowLoginModal: () => {},
+  deferredPrompt: null,
+  installApp: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -35,8 +39,17 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
+    // ... rest of useEffect
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         // Listen to user profile changes
@@ -53,8 +66,21 @@ export default function App() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      unsubscribe();
+    };
   }, []);
+
+  const installApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -69,7 +95,7 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal }}>
+    <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal, deferredPrompt, installApp }}>
       <Router>
         <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
           <Header />
