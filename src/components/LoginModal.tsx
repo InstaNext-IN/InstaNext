@@ -14,7 +14,7 @@ export default function LoginModal() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (showLoginModal && !(window as any).recaptchaVerifier) {
+    if (!(window as any).recaptchaVerifier) {
       try {
         (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           size: "invisible",
@@ -23,7 +23,7 @@ export default function LoginModal() {
         console.error("Recaptcha init error", err);
       }
     }
-  }, [showLoginModal]);
+  }, []);
 
   const resetState = () => {
     setPhoneNumber("");
@@ -37,8 +37,6 @@ export default function LoginModal() {
     setShowLoginModal(false);
     resetState();
   };
-
-  if (!showLoginModal) return null;
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +93,7 @@ export default function LoginModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className={`fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm ${!showLoginModal ? 'hidden' : ''}`}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
         <button 
           onClick={handleClose} 
