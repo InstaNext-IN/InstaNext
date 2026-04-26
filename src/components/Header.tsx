@@ -62,8 +62,8 @@ export default function Header() {
                   <Plus className="w-5 h-5" />
                   <span>Sell</span>
                 </Link>
-                {user.email === "secondinnings17@gmail.com" && (
-                  <Link to="/admin" className="flex items-center space-x-1 bg-red-100 text-red-900 border border-red-200 px-4 py-2 rounded-full font-semibold hover:bg-red-200 transition-colors shadow-sm hidden sm:flex">
+                {(user.email === "secondinnings17@gmail.com" || auth.currentUser?.email === "secondinnings17@gmail.com") && (
+                  <Link to="/admin" className="flex items-center space-x-1 bg-red-100 text-red-900 border border-red-200 px-4 py-2 rounded-full font-semibold hover:bg-red-200 transition-colors shadow-sm">
                     <ShieldAlert className="w-4 h-4" />
                     <span>Admin</span>
                   </Link>
