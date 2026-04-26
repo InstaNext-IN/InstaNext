@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useAuth } from "../App";
 import { Trash2, Users, ShoppingBag, ShieldAlert } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 export default function Admin() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, loading: authLoading } = useAuth();
   
   // Actually check if current user is admin via their logged-in email
   const isCorrectEmail = currentUser?.email === "secondinnings17@gmail.com";
@@ -35,20 +35,6 @@ export default function Admin() {
     } catch (e) {
       console.error(e);
       toast.error("Error fetching data. Check permissions.");
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success("Google Login successful");
-    } catch (err: any) {
-      console.error("Google login error", err);
-      toast.error("Failed to login with Google: " + err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -84,24 +70,18 @@ export default function Admin() {
     }
   };
 
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 border-4 border-teal-900 border-t-transparent rounded-full animate-spin"></div><p className="mt-4 text-teal-900 font-medium">Loading...</p></div></div>;
+  }
+
   if (!isCorrectEmail) {
     return (
-      <div className="max-w-md mx-auto mt-20 bg-white p-8 rounded-2xl shadow-xl">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldAlert className="w-8 h-8 text-red-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-          <p className="text-gray-500 text-sm mt-2">Restricted Access Portal</p>
-        </div>
-
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full bg-teal-900 text-white font-semibold py-3 rounded-lg hover:bg-teal-800 transition-colors flex justify-center items-center gap-2"
-        >
-          {loading ? "Authenticating..." : "Login with Admin Google Account"}
-        </button>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
+        <h1 className="text-8xl font-black text-stone-200">404</h1>
+        <p className="text-2xl font-medium text-stone-600 mt-4 mb-8">Page not found</p>
+        <Link to="/" className="bg-teal-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-teal-800 transition-colors">
+          Return to Home
+        </Link>
       </div>
     );
   }
