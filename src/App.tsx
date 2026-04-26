@@ -57,7 +57,9 @@ export default function App() {
         const userRef = doc(db, "users", firebaseUser.uid);
         onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
-            setUser(doc.data() as User);
+            setUser({ ...doc.data(), uid: firebaseUser.uid, email: firebaseUser.email || doc.data().email } as any);
+          } else {
+            setUser({ uid: firebaseUser.uid, email: firebaseUser.email, displayName: firebaseUser.displayName, isVerified: true, createdAt: new Date().toISOString() } as any);
           }
           setLoading(false);
         });
