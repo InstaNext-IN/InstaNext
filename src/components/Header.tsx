@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Plus, User as UserIcon, LogIn, LogOut, MessageCircle, Download } from "lucide-react";
+import { Search, Plus, User as UserIcon, LogIn, LogOut, MessageCircle, Download, ShieldAlert } from "lucide-react";
 import { useAuth } from "../App";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
@@ -62,6 +62,12 @@ export default function Header() {
                   <Plus className="w-5 h-5" />
                   <span>Sell</span>
                 </Link>
+                {user.email === "secondinnings17@gmail.com" && (
+                  <Link to="/admin" className="flex items-center space-x-1 bg-red-100 text-red-900 border border-red-200 px-4 py-2 rounded-full font-semibold hover:bg-red-200 transition-colors shadow-sm hidden sm:flex">
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Admin</span>
+                  </Link>
+                )}
                 <Link to="/profile" className="p-2 hover:bg-teal-800 rounded-full transition-colors relative">
                   <UserIcon className="w-6 h-6" />
                   {user.isVerified && (
