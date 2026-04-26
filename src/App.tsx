@@ -10,6 +10,7 @@ import Sell from "./pages/Sell";
 import Profile from "./pages/Profile";
 import SellerProfile from "./pages/SellerProfile";
 import Chat from "./pages/Chat";
+import Admin from "./pages/Admin";
 import Header from "./components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -105,6 +106,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/listing/:id" element={<ListingDetail />} />
                 <Route path="/seller/:id" element={<SellerProfile />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/sell" element={user ? <Sell /> : <Navigate to="/" />} />
                 <Route path="/profile" element={user ? <Profile /> : <Navigate to="/" />} />
                 <Route path="/chat/:chatId" element={user ? <Chat /> : <Navigate to="/" />} />
