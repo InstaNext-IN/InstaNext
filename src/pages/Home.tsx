@@ -42,8 +42,9 @@ export default function Home() {
     const unsubscribe = onSnapshot(qListing, (snapshot) => {
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
       
-      // Filter out deleted
-      data = data.filter(l => l.status !== 'deleted');
+      // Filter out deleted and expired items
+      const thirtyDaysAgo = new Date().getTime() - 30 * 24 * 60 * 60 * 1000;
+      data = data.filter(l => l.status !== 'deleted' && new Date(l.createdAt).getTime() > thirtyDaysAgo);
       
       // Filter by category
       if (selectedCategory !== "All") {

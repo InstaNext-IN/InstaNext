@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Listing } from "../types";
-import { BadgeCheck, MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag } from "lucide-react";
+import { BadgeCheck, MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag, RotateCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../App";
 import { db, auth, OperationType, handleFirestoreError } from "../firebase";
@@ -12,8 +12,12 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   const navigate = useNavigate();
   const [chatLoading, setChatLoading] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+  const [repostLoading, setRepostLoading] = useState(false);
 
   const isFavorited = currentUser?.favorites?.includes(listing.id);
+  const thirtyDaysAgo = new Date().getTime() - 30 * 24 * 60 * 60 * 1000;
+  const isExpired = new Date(listing.createdAt).getTime() <= thirtyDaysAgo;
+  const isOwner = currentUser?.uid === listing.sellerId;
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,6 +37,22 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       handleFirestoreError(error, OperationType.UPDATE, "users");
     } finally {
       setFavLoading(false);
+    }
+  };
+
+  const handleRepost = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRepostLoading(true);
+    try {
+      const listingRef = doc(db, "listings", listing.id);
+      await updateDoc(listingRef, {
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, "listings");
+    } finally {
+      setRepostLoading(false);
     }
   };
 
@@ -72,20 +92,27 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden group flex flex-col h-full"
+      className={`bg-white rounded-2xl shadow-sm border ${isExpired ? 'border-red-200' : 'border-stone-100'} overflow-hidden group flex flex-col h-full`}
     >
       <Link to={`/listing/${listing.id}`} className="flex-1 flex flex-col relative">
         <div className="relative aspect-square overflow-hidden bg-stone-100">
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/400/400"}
             alt={listing.title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${listing.status === 'sold' ? 'grayscale opacity-70' : ''}`}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
           />
           {listing.status === 'sold' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg tracking-widest rotate-[-12deg] shadow-xl">
                 SOLD
+              </span>
+            </div>
+          )}
+          {isExpired && listing.status !== 'sold' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg tracking-widest shadow-xl">
+                EXPIRED
               </span>
             </div>
           )}
@@ -140,7 +167,24 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         </div>
       </Link>
       
-      {currentUser?.uid !== listing.sellerId && listing.status !== 'sold' && (
+      {isOwner && isExpired && listing.status !== 'sold' && (
+        <div className="p-4 pt-0">
+          <button
+            onClick={handleRepost}
+            disabled={repostLoading}
+            className="w-full bg-gold-500 text-teal-900 py-2 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 hover:bg-gold-600 transition-colors disabled:opacity-50"
+          >
+            {repostLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RotateCw className="w-4 h-4" />
+            )}
+            <span>{repostLoading ? "Reposting..." : "Repost AD"}</span>
+          </button>
+        </div>
+      )}
+      
+      {!isOwner && listing.status !== 'sold' && !isExpired && (
         <div className="p-4 pt-0">
           <button
             onClick={startChat}

@@ -25,6 +25,8 @@ export default function ListingDetail() {
   const navigate = useNavigate();
 
   const isFavorited = currentUser?.favorites?.includes(listing?.id || "");
+  const thirtyDaysAgo = new Date().getTime() - 30 * 24 * 60 * 60 * 1000;
+  const isExpired = listing && new Date(listing.createdAt).getTime() <= thirtyDaysAgo;
 
   const toggleFavorite = async () => {
     if (!currentUser || !listing) {
@@ -199,13 +201,20 @@ export default function ListingDetail() {
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/800/800"}
             alt={listing.title}
-            className={`w-full h-full object-cover ${listing.status === 'sold' ? 'grayscale opacity-70' : ''}`}
+            className={`w-full h-full object-cover ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
           />
           {listing.status === 'sold' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <span className="bg-red-600 text-white px-6 py-3 rounded-xl font-black text-3xl tracking-widest rotate-[-12deg] shadow-2xl border-4 border-red-700">
                 SOLD
+              </span>
+            </div>
+          )}
+          {isExpired && listing.status !== 'sold' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <span className="bg-red-600 text-white px-6 py-3 rounded-xl font-black text-3xl tracking-widest shadow-2xl border-4 border-red-700">
+                EXPIRED
               </span>
             </div>
           )}
@@ -373,7 +382,15 @@ export default function ListingDetail() {
                 Delete
               </button>
             </div>
-          ) : listing.status !== 'sold' ? (
+          ) : listing.status === 'sold' ? (
+            <div className="w-full bg-stone-800 text-white px-6 py-4 rounded-full font-black uppercase tracking-widest text-center opacity-70">
+              Item Sold
+            </div>
+          ) : isExpired ? (
+            <div className="w-full bg-stone-800 text-white px-6 py-4 rounded-full font-black uppercase tracking-widest text-center opacity-70">
+              Item Expired
+            </div>
+          ) : (
             <button
               onClick={() => {
                 if (!currentUser) {
@@ -392,10 +409,6 @@ export default function ListingDetail() {
               )}
               <span>{chatLoading ? "Starting Chat..." : "Chat with Seller"}</span>
             </button>
-          ) : (
-            <div className="w-full bg-stone-800 text-white px-6 py-4 rounded-full font-black uppercase tracking-widest text-center opacity-70">
-              Item Sold
-            </div>
           )}
         </div>
 
