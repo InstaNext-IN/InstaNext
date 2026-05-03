@@ -32,23 +32,47 @@ export default function IOSInstallModal() {
           </p>
 
           <div className="space-y-6 text-left bg-stone-50 p-6 rounded-2xl border border-stone-100">
-            <div className="flex items-center space-x-4">
-              <div className="bg-white p-2 rounded-xl shadow-sm">
-                <Share className="w-6 h-6 text-blue-500" />
-              </div>
-              <p className="text-stone-700 font-medium text-sm">
-                1. Tap the <span className="font-bold text-stone-900">Share</span> button at the bottom of your screen.
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="bg-white p-2 rounded-xl shadow-sm">
-                <PlusSquare className="w-6 h-6 text-stone-600" />
-              </div>
-              <p className="text-stone-700 font-medium text-sm">
-                2. Tap <span className="font-bold text-stone-900">Add to Home Screen</span>.
-              </p>
-            </div>
+            {navigator.userAgent.toLowerCase().includes('iphone') || navigator.userAgent.toLowerCase().includes('ipad') ? (
+              <>
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white p-2 rounded-xl shadow-sm">
+                    <Share className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <p className="text-stone-700 font-medium text-sm">
+                    1. Tap the <span className="font-bold text-stone-900">Share</span> button at the bottom of your screen.
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white p-2 rounded-xl shadow-sm">
+                    <PlusSquare className="w-6 h-6 text-stone-600" />
+                  </div>
+                  <p className="text-stone-700 font-medium text-sm">
+                    2. Tap <span className="font-bold text-stone-900">Add to Home Screen</span>.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white p-2 rounded-xl shadow-sm">
+                    <Share className="w-6 h-6 text-stone-600" />
+                  </div>
+                  <p className="text-stone-700 font-medium text-sm">
+                    1. Open your browser's <span className="font-bold text-stone-900">menu</span> (often 3 dots or lines).
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white p-2 rounded-xl shadow-sm">
+                    <PlusSquare className="w-6 h-6 text-stone-600" />
+                  </div>
+                  <p className="text-stone-700 font-medium text-sm">
+                    2. Select <span className="font-bold text-stone-900">Install App</span> or <span className="font-bold text-stone-900">Add to Home Screen</span>.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

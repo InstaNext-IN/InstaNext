@@ -106,6 +106,8 @@ export default function App() {
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
       }
+    } else {
+      setShowIOSInstallPrompt(true);
     }
   };
 

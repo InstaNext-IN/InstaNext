@@ -49,7 +49,7 @@ export default function Header() {
           <nav className="flex items-center space-x-4">
             {user ? (
               <>
-                {(deferredPrompt || (isIOS && !isStandalone)) && (
+                {!isStandalone && (
                   <button 
                     onClick={installApp} 
                     className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
@@ -80,7 +80,7 @@ export default function Header() {
               </>
             ) : (
               <>
-                {(deferredPrompt || (isIOS && !isStandalone)) && (
+                {!isStandalone && (
                   <button 
                     onClick={installApp} 
                     className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
