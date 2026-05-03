@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Plus, User as UserIcon, LogIn, LogOut, MessageCircle, Download, ShieldAlert } from "lucide-react";
+import { Search, Plus, User as UserIcon, LogIn, LogOut, MessageCircle, Download, ShieldAlert, HelpCircle } from "lucide-react";
 import { useAuth } from "../App";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
@@ -47,6 +47,10 @@ export default function Header() {
 
           {/* Actions */}
           <nav className="flex items-center space-x-4">
+            <Link to="/faq" className="hidden sm:flex items-center space-x-1 hover:text-gold-300 transition-colors">
+              <HelpCircle className="w-5 h-5 cursor-pointer" />
+              <span className="font-semibold text-sm">FAQ</span>
+            </Link>
             {user ? (
               <>
                 {!isStandalone && (

@@ -12,6 +12,7 @@ import SellerProfile from "./pages/SellerProfile";
 import Chat from "./pages/Chat";
 import Admin from "./pages/Admin";
 import Header from "./components/Header";
+import FAQ from "./pages/FAQ";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface AuthContextType {
@@ -132,6 +133,7 @@ export default function App() {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/listing/:id" element={<ListingDetail />} />
                 <Route path="/seller/:id" element={<SellerProfile />} />
                 <Route path="/admin" element={<Admin />} />
