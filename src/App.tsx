@@ -21,6 +21,10 @@ interface AuthContextType {
   setShowLoginModal: (show: boolean) => void;
   deferredPrompt: any;
   installApp: () => void;
+  isIOS: boolean;
+  isStandalone: boolean;
+  showIOSInstallPrompt: boolean;
+  setShowIOSInstallPrompt: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -29,21 +33,37 @@ const AuthContext = createContext<AuthContextType>({
   showLoginModal: false,
   setShowLoginModal: () => {},
   deferredPrompt: null,
-  installApp: () => {}
+  installApp: () => {},
+  isIOS: false,
+  isStandalone: false,
+  showIOSInstallPrompt: false,
+  setShowIOSInstallPrompt: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 import LoginModal from "./components/LoginModal";
+import IOSInstallModal from "./components/IOSInstallModal";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showIOSInstallPrompt, setShowIOSInstallPrompt] = useState(false);
 
   useEffect(() => {
-    // ... rest of useEffect
+    // Detect iOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
+
+    // Detect standalone mode
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    setIsStandalone(isStandaloneMode);
+
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -76,6 +96,10 @@ export default function App() {
   }, []);
 
   const installApp = async () => {
+    if (isIOS && !isStandalone) {
+      setShowIOSInstallPrompt(true);
+      return;
+    }
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -98,7 +122,7 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal, deferredPrompt, installApp }}>
+    <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal, deferredPrompt, installApp, isIOS, isStandalone, showIOSInstallPrompt, setShowIOSInstallPrompt }}>
       <Router>
         <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
           <Header />
@@ -116,6 +140,7 @@ export default function App() {
             </AnimatePresence>
           </main>
           <LoginModal />
+          <IOSInstallModal />
         </div>
       </Router>
     </AuthContext.Provider>

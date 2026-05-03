@@ -6,7 +6,7 @@ import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 export default function Header() {
-  const { user, setShowLoginModal, deferredPrompt, installApp } = useAuth();
+  const { user, setShowLoginModal, deferredPrompt, installApp, isIOS, isStandalone } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -49,13 +49,13 @@ export default function Header() {
           <nav className="flex items-center space-x-4">
             {user ? (
               <>
-                {deferredPrompt && (
+                {(deferredPrompt || (isIOS && !isStandalone)) && (
                   <button 
                     onClick={installApp} 
-                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm hidden sm:flex"
+                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Install App</span>
+                    <span className="hidden sm:inline">Install App</span>
                   </button>
                 )}
                 <Link to="/sell" className="flex items-center space-x-1 bg-gold-500 text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-gold-600 transition-colors shadow-md">
@@ -79,13 +79,24 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => setShowLoginModal(true)}
-                className="flex items-center space-x-2 bg-white text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-100 transition-colors shadow-md"
-              >
-                <LogIn className="w-5 h-5" />
-                <span>Login</span>
-              </button>
+              <>
+                {(deferredPrompt || (isIOS && !isStandalone)) && (
+                  <button 
+                    onClick={installApp} 
+                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Install App</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="flex items-center space-x-2 bg-white text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-100 transition-colors shadow-md"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span>Login</span>
+                </button>
+              </>
             )}
           </nav>
         </div>
