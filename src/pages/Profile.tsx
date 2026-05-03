@@ -19,11 +19,6 @@ export default function Profile() {
   const [verifying, setVerifying] = useState(false);
   const [chats, setChats] = useState<ChatWithDetails[]>([]);
   const [chatsLoading, setChatsLoading] = useState(true);
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1); // 1: Phone, 2: OTP, 3: Success
-  const [error, setError] = useState<string | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'listings' | 'saved' | 'chats'>('profile');
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [savedListings, setSavedListings] = useState<Listing[]>([]);

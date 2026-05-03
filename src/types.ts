@@ -3,7 +3,6 @@ export interface User {
   displayName: string;
   email: string;
   photoURL?: string;
-  phoneNumber?: string;
   isVerified: boolean;
   createdAt: string;
   favorites?: string[];
