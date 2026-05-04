@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, deleteDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, deleteDoc, doc, Timestamp, orderBy, query } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useAuth } from "../App";
@@ -23,25 +23,26 @@ export default function Admin() {
 
   useEffect(() => {
     if (isCorrectEmail && isAuthenticated) {
-      fetchDa();
+      const unsubListings = onSnapshot(collection(db, "listings"), (snap) => {
+        setListings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }, (err) => console.error("Listings error:", err));
+
+      const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
+        setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }, (err) => console.error("Users error:", err));
+
+      const qTickets = query(collection(db, "support_tickets"), orderBy("createdAt", "desc"));
+      const unsubTickets = onSnapshot(qTickets, (snap) => {
+        setSupportTickets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }, (err) => console.error("Tickets error:", err));
+
+      return () => {
+        unsubListings();
+        unsubUsers();
+        unsubTickets();
+      };
     }
   }, [isCorrectEmail, isAuthenticated]);
-
-  const fetchDa = async () => {
-    try {
-      const listingSnap = await getDocs(collection(db, "listings"));
-      setListings(listingSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      const usersSnap = await getDocs(collection(db, "users"));
-      setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-      
-      const ticketsSnap = await getDocs(collection(db, "support_tickets"));
-      setSupportTickets(ticketsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (e) {
-      console.error(e);
-      toast.error("Error fetching data. Check permissions.");
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     setLoginLoading(true);
