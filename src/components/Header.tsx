@@ -46,25 +46,25 @@ export default function Header() {
           </form>
 
           {/* Actions */}
-          <nav className="flex items-center space-x-4">
-            <Link to="/faq" className="hidden sm:flex items-center space-x-1 hover:text-gold-300 transition-colors">
+          <nav className="flex items-center space-x-2 sm:space-x-4">
+            <Link to="/faq" className="flex items-center space-x-1 hover:text-gold-300 transition-colors">
               <HelpCircle className="w-5 h-5 cursor-pointer" />
-              <span className="font-semibold text-sm">FAQ</span>
+              <span className="hidden sm:inline font-semibold text-sm">FAQ</span>
             </Link>
             {user ? (
               <>
                 {!isStandalone && (
                   <button 
                     onClick={installApp} 
-                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
+                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-3 sm:px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
                   >
                     <Download className="w-4 h-4" />
                     <span className="hidden sm:inline">Install App</span>
                   </button>
                 )}
-                <Link to="/sell" className="flex items-center space-x-1 bg-gold-500 text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-gold-600 transition-colors shadow-md">
+                <Link to="/sell" className="flex items-center space-x-1 bg-gold-500 text-teal-900 px-3 sm:px-4 py-2 rounded-full font-semibold hover:bg-gold-600 transition-colors shadow-md">
                   <Plus className="w-5 h-5" />
-                  <span>Sell</span>
+                  <span className="hidden sm:inline">Sell</span>
                 </Link>
                 {(user.email === "secondinnings17@gmail.com" || auth.currentUser?.email === "secondinnings17@gmail.com") && (
                   <Link to="/admin" className="flex items-center space-x-1 bg-red-100 text-red-900 border border-red-200 px-4 py-2 rounded-full font-semibold hover:bg-red-200 transition-colors shadow-sm">
@@ -87,7 +87,7 @@ export default function Header() {
                 {!isStandalone && (
                   <button 
                     onClick={installApp} 
-                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
+                    className="flex items-center space-x-1 bg-stone-100 text-teal-900 border border-teal-900 px-3 sm:px-4 py-2 rounded-full font-semibold hover:bg-stone-200 transition-colors shadow-sm"
                   >
                     <Download className="w-4 h-4" />
                     <span className="hidden sm:inline">Install App</span>
@@ -95,10 +95,10 @@ export default function Header() {
                 )}
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="flex items-center space-x-2 bg-white text-teal-900 px-4 py-2 rounded-full font-semibold hover:bg-stone-100 transition-colors shadow-md"
+                  className="flex items-center space-x-2 bg-white text-teal-900 px-3 sm:px-4 py-2 rounded-full font-semibold hover:bg-stone-100 transition-colors shadow-md"
                 >
                   <LogIn className="w-5 h-5" />
-                  <span>Login</span>
+                  <span className="hidden sm:inline">Login</span>
                 </button>
               </>
             )}
