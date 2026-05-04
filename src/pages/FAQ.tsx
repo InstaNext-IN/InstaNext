@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, HelpCircle, Shield, CreditCard, RotateCw, MessagesSquare } from 'lucide-react';
+import { ChevronDown, HelpCircle, Shield, CreditCard, RotateCw, MessagesSquare, Send, X, Loader2 } from 'lucide-react';
+import { useAuth } from '../App';
+import { db, handleFirestoreError, OperationType } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
 const faqs = [
   {
@@ -67,10 +71,51 @@ const faqs = [
 
 export default function FAQ() {
   const [openItems, setOpenItems] = useState<{ [key: string]: boolean }>({});
+  const { user, setShowLoginModal } = useAuth();
+  const [showSupportForm, setShowSupportForm] = useState(false);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleItem = (categoryIndex: number, itemIndex: number) => {
     const key = `${categoryIndex}-${itemIndex}`;
     setOpenItems(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSupportClick = () => {
+    if (!user) {
+      toast.error('Please login to contact support');
+      setShowLoginModal(true);
+      return;
+    }
+    setShowSupportForm(true);
+  };
+
+  const submitSupportTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!supportMessage.trim()) {
+      toast.error('Please enter a message');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, "support_tickets"), {
+        userId: user.uid,
+        userEmail: user.email,
+        message: supportMessage,
+        status: "open",
+        createdAt: serverTimestamp(),
+      });
+      toast.success("Message sent to support! We will get back to you soon.");
+      setSupportMessage('');
+      setShowSupportForm(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, "support_tickets");
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -136,17 +181,90 @@ export default function FAQ() {
         ))}
       </div>
       
-      <div className="mt-16 text-center bg-teal-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl">
-        <h3 className="text-2xl font-bold mb-4">Still have questions?</h3>
-        <p className="text-teal-100 mb-8 max-w-lg mx-auto">
-          Can't find the answer you're looking for? Please contact our friendly team.
-        </p>
-        <button 
-          onClick={() => window.location.href = "mailto:support@instanext.in"}
-          className="bg-gold-500 text-teal-900 font-bold px-8 py-3 rounded-xl hover:bg-gold-600 transition-colors shadow-lg"
-        >
-          Contact Support
-        </button>
+      <div className="mt-16 bg-teal-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {!showSupportForm ? (
+            <motion.div 
+              key="support-prompt"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="text-center"
+            >
+              <h3 className="text-2xl font-bold mb-4">Still have questions?</h3>
+              <p className="text-teal-100 mb-8 max-w-lg mx-auto">
+                Can't find the answer you're looking for? Please contact our friendly team.
+              </p>
+              <button 
+                onClick={handleSupportClick}
+                className="bg-gold-500 text-teal-900 font-bold px-8 py-3 rounded-xl hover:bg-gold-600 transition-colors shadow-lg inline-flex items-center space-x-2"
+              >
+                <MessagesSquare className="w-5 h-5" />
+                <span>Contact Support</span>
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="support-form"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="max-w-2xl mx-auto bg-white rounded-2xl p-6 sm:p-8 text-stone-900 shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowSupportForm(false)}
+                className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <h3 className="text-2xl font-bold mb-6 flex items-center space-x-2">
+                <Shield className="w-6 h-6 text-gold-500" />
+                <span>Submit a Request</span>
+              </h3>
+              
+              <form onSubmit={submitSupportTicket} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-2">From Address</label>
+                  <input 
+                    type="email" 
+                    disabled 
+                    value={user?.email || ''} 
+                    className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-stone-500 font-medium focus:outline-none cursor-not-allowed"
+                  />
+                  <p className="text-xs text-stone-500 mt-2">
+                    We will reply to this email address. Your issue will be sent securely to our support team.
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-2">How can we help?</label>
+                  <textarea 
+                    rows={4}
+                    value={supportMessage}
+                    onChange={(e) => setSupportMessage(e.target.value)}
+                    placeholder="Describe your issue, query, or suggestion in detail..."
+                    className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-stone-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent resize-none"
+                    required
+                  ></textarea>
+                </div>
+                
+                <button 
+                  type="submit"
+                  disabled={isSubmitting || !supportMessage.trim()}
+                  className="w-full bg-teal-900 text-white font-bold py-4 rounded-xl flex items-center justify-center space-x-2 hover:bg-teal-800 transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                  <span>{isSubmitting ? 'Sending Request...' : 'Send Message'}</span>
+                </button>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

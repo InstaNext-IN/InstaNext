@@ -3,7 +3,7 @@ import { collection, getDocs, deleteDoc, doc, Timestamp } from "firebase/firesto
 import { db, auth } from "../firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useAuth } from "../App";
-import { Trash2, Users, ShoppingBag, ShieldAlert } from "lucide-react";
+import { Trash2, Users, ShoppingBag, ShieldAlert, MessageSquare } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
 
@@ -16,6 +16,7 @@ export default function Admin() {
   
   const [listings, setListings] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
 
   // Check if current user is admin via their logged-in email
   const isCorrectEmail = currentUser?.email === "secondinnings17@gmail.com" || auth.currentUser?.email === "secondinnings17@gmail.com";
@@ -33,6 +34,9 @@ export default function Admin() {
       
       const usersSnap = await getDocs(collection(db, "users"));
       setUsers(usersSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      
+      const ticketsSnap = await getDocs(collection(db, "support_tickets"));
+      setSupportTickets(ticketsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
     } catch (e) {
       console.error(e);
       toast.error("Error fetching data. Check permissions.");
@@ -80,6 +84,17 @@ export default function Admin() {
       await deleteDoc(doc(db, "users", id));
       setUsers(users.filter(u => u.id !== id));
       toast.success("User profile deleted");
+    } catch (e: any) {
+      toast.error("Delete failed: " + e.message);
+    }
+  };
+
+  const deleteTicket = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this support ticket?")) return;
+    try {
+      await deleteDoc(doc(db, "support_tickets", id));
+      setSupportTickets(supportTickets.filter(t => t.id !== id));
+      toast.success("Support ticket deleted");
     } catch (e: any) {
       toast.error("Delete failed: " + e.message);
     }
@@ -213,6 +228,38 @@ export default function Admin() {
             ))}
             {users.length === 0 && <div className="p-8 text-center text-gray-500">No users found.</div>}
           </div>
+        </div>
+      </div>
+
+      {/* Support Tickets Panel */}
+      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-gold-600" /> Support Tickets ({supportTickets.length})
+          </h2>
+        </div>
+        <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+          {supportTickets.map(t => (
+            <div key={t.id} className="p-4 flex items-start justify-between hover:bg-gray-50">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium text-gray-900">{t.userEmail}</h3>
+                  <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">{t.status || 'open'}</span>
+                  {t.createdAt?.seconds && (
+                    <span className="text-xs text-gray-400">
+                      {new Date(t.createdAt.seconds * 1000).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{t.message}</p>
+                <div className="text-xs text-gray-400">UID: {t.userId}</div>
+              </div>
+              <button onClick={() => deleteTicket(t.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg ml-4 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          ))}
+          {supportTickets.length === 0 && <div className="p-8 text-center text-gray-500">No support tickets found.</div>}
         </div>
       </div>
     </div>
