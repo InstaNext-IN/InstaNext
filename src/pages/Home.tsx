@@ -114,8 +114,8 @@ export default function Home() {
         <h1 className="text-5xl font-bold tracking-tight">
           Insta <span className="text-gold-500 italic">Next.in</span>
         </h1>
-        <p className="text-teal-100 text-lg max-w-2xl mx-auto relative z-10">
-          Give pre-loved items a new life. Secure, verified, and community-driven.
+        <p className="text-teal-100 text-lg max-w-2xl mx-auto relative z-10 font-bold">
+          Buy and sell used things
         </p>
       </section>
 
