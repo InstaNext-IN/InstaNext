@@ -62,6 +62,10 @@ export default function Header() {
                     <span className="hidden sm:inline">Install App</span>
                   </button>
                 )}
+                <Link to="/profile" state={{ activeTab: 'chats' }} className="flex items-center space-x-1 text-white hover:text-gold-300 transition-colors p-2">
+                  <MessageCircle className="w-6 h-6" />
+                  <span className="hidden sm:inline font-semibold text-sm">My Chats</span>
+                </Link>
                 <Link to="/sell" className="flex items-center space-x-1 bg-gold-500 text-teal-900 px-3 sm:px-4 py-2 rounded-full font-semibold hover:bg-gold-600 transition-colors shadow-md">
                   <Plus className="w-5 h-5" />
                   <span className="hidden sm:inline">Sell</span>

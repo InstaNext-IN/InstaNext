@@ -5,7 +5,7 @@ import { doc, updateDoc, collection, query, where, onSnapshot, getDoc } from "fi
 import { BadgeCheck, Phone, ShieldCheck, Loader2, User as UserIcon, MessageSquare, ArrowRight, Package, Heart, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chat, Listing, User } from "../types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import ListingCard from "../components/ListingCard";
 
 interface ChatWithDetails extends Chat {
@@ -16,10 +16,20 @@ interface ChatWithDetails extends Chat {
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [verifying, setVerifying] = useState(false);
   const [chats, setChats] = useState<ChatWithDetails[]>([]);
   const [chatsLoading, setChatsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'profile' | 'listings' | 'saved' | 'chats'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'listings' | 'saved' | 'chats'>(
+    location.state?.activeTab || 'profile'
+  );
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
