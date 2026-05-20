@@ -24,8 +24,14 @@ export default function Admin() {
 
   useEffect(() => {
     if (isCorrectEmail && isAuthenticated) {
-      const unsubListings = onSnapshot(collection(db, "listings"), (snap) => {
-        setListings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const qListings = query(collection(db, "listings")); // In a real app we'd order by createdAt if it was indexed properly to match all roles
+      const unsubListings = onSnapshot(qListings, (snap) => {
+        const sortedListings = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a: any, b: any) => {
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setListings(sortedListings);
       }, (err) => console.error("Listings error:", err));
 
       const unsubUsers = onSnapshot(collection(db, "users"), (snap) => {
@@ -303,22 +309,22 @@ export default function Admin() {
                   </div>
                   <p className="text-sm text-gray-500">₹{l.price} • {l.category}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-2 sm:mt-0">
                   {l.status === 'pending' && (
                     <button 
                       onClick={() => approveListing(l.id)}
-                      className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                      className="px-3 py-1.5 bg-teal-600 text-white hover:bg-teal-700 rounded-lg transition-colors flex items-center gap-1.5 text-sm font-semibold shadow-sm"
                       title="Approve Listing"
                     >
-                      <CheckCircle className="w-5 h-5" />
+                      <CheckCircle className="w-4 h-4" /> Approve
                     </button>
                   )}
                   <button 
                     onClick={() => deleteListing(l.id)} 
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors flex items-center gap-1.5 text-sm font-medium"
                     title="Delete Listing"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" /> Delete
                   </button>
                 </div>
               </div>

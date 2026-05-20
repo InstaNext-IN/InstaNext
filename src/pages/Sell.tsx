@@ -19,6 +19,7 @@ export default function Sell() {
   const [moderating, setModerating] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emptyFields, setEmptyFields] = useState<string[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -149,13 +150,22 @@ export default function Sell() {
       setError("You must be logged in to post a listing.");
       return;
     }
-    if (!preview) {
-      setError("Please upload a product photo.");
-      return;
-    }
+    
+    // Validate fields
+    const missing: string[] = [];
+    if (!preview) missing.push("photo");
+    if (!formData.title.trim()) missing.push("title");
+    if (!formData.price.toString().trim()) missing.push("price");
+    if (!formData.description.trim()) missing.push("description");
+    if (!formData.state) missing.push("state");
+    if (!formData.district) missing.push("district");
+    if (!formData.city.trim()) missing.push("city");
+    if (!formData.area.trim()) missing.push("area");
 
-    if (!formData.state || !formData.district || !formData.city || !formData.area) {
-      setError("Please complete all location fields.");
+    setEmptyFields(missing);
+
+    if (missing.length > 0) {
+      setError("Please fill out all missing fields highlighted in red.");
       return;
     }
 
@@ -209,14 +219,14 @@ export default function Sell() {
       <form onSubmit={handleSubmit} className="p-8 space-y-6">
         {/* Image Upload */}
         <div className="space-y-2">
-          <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">Product Photo</label>
-          <div className="relative aspect-video bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl flex flex-col items-center justify-center overflow-hidden group hover:border-teal-500 transition-colors">
+          <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('photo') ? 'text-red-500' : 'text-stone-700'}`}>Product Photo</label>
+          <div className={`relative aspect-video bg-stone-50 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center overflow-hidden group hover:border-teal-500 transition-colors ${emptyFields.includes('photo') ? 'border-red-500' : 'border-stone-200'}`}>
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
               <div className="text-center space-y-2">
-                <Camera className="w-12 h-12 text-stone-300 mx-auto" />
-                <p className="text-stone-400 text-sm">Click to upload or drag & drop</p>
+                <Camera className={`w-12 h-12 mx-auto ${emptyFields.includes('photo') ? 'text-red-300' : 'text-stone-300'}`} />
+                <p className={`text-sm ${emptyFields.includes('photo') ? 'text-red-400' : 'text-stone-400'}`}>Click to upload or drag & drop</p>
               </div>
             )}
             <input
@@ -224,7 +234,6 @@ export default function Sell() {
               accept="image/*"
               onChange={handleImageChange}
               className="absolute inset-0 opacity-0 cursor-pointer"
-              required
             />
             {processing && (
               <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-2">
@@ -249,24 +258,22 @@ export default function Sell() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">Title</label>
+            <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('title') ? 'text-red-500' : 'text-stone-700'}`}>Title</label>
             <input
               type="text"
-              required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+              className={`w-full bg-stone-50 border rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all ${emptyFields.includes('title') ? 'border-red-500' : 'border-stone-200'}`}
               placeholder="e.g. iPhone 13 Pro"
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">Price (₹)</label>
+            <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('price') ? 'text-red-500' : 'text-stone-700'}`}>Price (₹)</label>
             <input
               type="number"
-              required
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+              className={`w-full bg-stone-50 border rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all ${emptyFields.includes('price') ? 'border-red-500' : 'border-stone-200'}`}
               placeholder="0.00"
             />
           </div>
@@ -305,13 +312,12 @@ export default function Sell() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-bold text-stone-700 uppercase tracking-wider">Description</label>
+          <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('description') ? 'text-red-500' : 'text-stone-700'}`}>Description</label>
           <textarea
-            required
             rows={4}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+            className={`w-full bg-stone-50 border rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all ${emptyFields.includes('description') ? 'border-red-500' : 'border-stone-200'}`}
             placeholder="Tell buyers about your item..."
           />
         </div>
@@ -323,6 +329,7 @@ export default function Sell() {
             city={formData.city} setCity={(val) => setFormData(p => ({ ...p, city: val }))}
             area={formData.area} setArea={(val) => setFormData(p => ({ ...p, area: val }))}
             standalone={true}
+            errors={emptyFields}
           />
         </div>
 
