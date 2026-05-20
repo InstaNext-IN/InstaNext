@@ -34,7 +34,11 @@ export default function SellerProfile() {
 
     fetchSeller();
 
-    const qListings = query(collection(db, "listings"), where("sellerId", "==", id));
+    const qListings = query(
+      collection(db, "listings"), 
+      where("sellerId", "==", id),
+      where("status", "==", "active")
+    );
     const unsubscribeListings = onSnapshot(qListings, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
       setListings(data.filter(l => l.status !== 'deleted'));

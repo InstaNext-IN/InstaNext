@@ -38,7 +38,7 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    const qListing = query(collection(db, "listings"), orderBy("createdAt", "desc"));
+    const qListing = query(collection(db, "listings"), where("status", "==", "active"));
     const unsubscribe = onSnapshot(qListing, (snapshot) => {
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
       
