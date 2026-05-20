@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { collection, onSnapshot, deleteDoc, doc, Timestamp, orderBy, query } from "firebase/firestore";
-import { db, auth } from "../firebase";
+import { db, auth, handleFirestoreError, OperationType } from "../firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useAuth } from "../App";
-import { Trash2, Users, ShoppingBag, ShieldAlert, MessageSquare } from "lucide-react";
+import { Trash2, Users, ShoppingBag, ShieldAlert, MessageSquare, CheckCircle, Clock } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
+import { updateDoc } from "firebase/firestore";
 
 export default function Admin() {
   const { user: currentUser, loading: authLoading } = useAuth();
@@ -60,7 +61,8 @@ export default function Admin() {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "Jumbopack@#1137#$") {
+    console.log("Submitting password:", password.trim());
+    if (password.trim() === "Jumbopack@#1137#$") {
       setIsAuthenticated(true);
       toast.success("Admin access granted.");
     } else {
@@ -69,37 +71,100 @@ export default function Admin() {
   };
 
   const deleteListing = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this listing?")) return;
+    toast.dismiss();
+    console.log("Admin: Initializing deleteListing for ID:", id);
+    if (!window.confirm("Are you sure you want to delete this listing?")) {
+      console.log("Admin: Delete cancelled by user");
+      return;
+    }
+    
+    const loadingToast = toast.loading("Processing listing removal...");
     try {
-      await deleteDoc(doc(db, "listings", id));
-      setListings(listings.filter(l => l.id !== id));
-      toast.success("Listing deleted");
+      console.log("Admin: Calling Firestore deleteDoc for listings/" + id);
+      const docRef = doc(db, "listings", id);
+      await deleteDoc(docRef);
+      console.log("Admin: Firestore deleteDoc success for listings/" + id);
+      toast.success("Listing removed", { id: loadingToast });
     } catch (e: any) {
-      toast.error("Delete failed: " + e.message);
+      console.error("Admin: Delete listing error:", e);
+      try {
+        handleFirestoreError(e, OperationType.DELETE, `listings/${id}`);
+      } catch (wrappedError: any) {
+        toast.error("Access Denied: " + wrappedError.message, { id: loadingToast });
+      }
     }
   };
 
   const deleteUser = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this user's profile data?")) return;
+    toast.dismiss();
+    console.log("Admin: Initializing deleteUser for ID:", id);
+    if (!window.confirm("Are you sure you want to delete this user profile?")) {
+      console.log("Admin: Delete cancelled by user");
+      return;
+    }
+    
+    const loadingToast = toast.loading("Processing user removal...");
     try {
-      await deleteDoc(doc(db, "users", id));
-      setUsers(users.filter(u => u.id !== id));
-      toast.success("User profile deleted");
+      console.log("Admin: Calling Firestore deleteDoc for users/" + id);
+      const docRef = doc(db, "users", id);
+      await deleteDoc(docRef);
+      console.log("Admin: Firestore deleteDoc success for users/" + id);
+      toast.success("User profile removed", { id: loadingToast });
     } catch (e: any) {
-      toast.error("Delete failed: " + e.message);
+      console.error("Admin: Delete user error:", e);
+      try {
+        handleFirestoreError(e, OperationType.DELETE, `users/${id}`);
+      } catch (wrappedError: any) {
+        toast.error("Access Denied: " + wrappedError.message, { id: loadingToast });
+      }
     }
   };
 
   const deleteTicket = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this support ticket?")) return;
+    toast.dismiss();
+    console.log("Admin: Initializing deleteTicket for ID:", id);
+    if (!window.confirm("Are you sure you want to delete this ticket?")) {
+      console.log("Admin: Delete cancelled by user");
+      return;
+    }
+    
+    const loadingToast = toast.loading("Processing ticket removal...");
     try {
-      await deleteDoc(doc(db, "support_tickets", id));
-      setSupportTickets(supportTickets.filter(t => t.id !== id));
-      toast.success("Support ticket deleted");
+      console.log("Admin: Calling Firestore deleteDoc for support_tickets/" + id);
+      const docRef = doc(db, "support_tickets", id);
+      await deleteDoc(docRef);
+      console.log("Admin: Firestore deleteDoc success for support_tickets/" + id);
+      toast.success("Ticket removed", { id: loadingToast });
     } catch (e: any) {
-      toast.error("Delete failed: " + e.message);
+      console.error("Admin: Delete ticket error:", e);
+      try {
+        handleFirestoreError(e, OperationType.DELETE, `support_tickets/${id}`);
+      } catch (wrappedError: any) {
+        toast.error("Access Denied: " + wrappedError.message, { id: loadingToast });
+      }
     }
   };
+
+  const approveListing = async (id: string) => {
+    toast.dismiss();
+    const loadingToast = toast.loading("Approving listing...");
+    try {
+      const docRef = doc(db, "listings", id);
+      await updateDoc(docRef, { status: "active" });
+      toast.success("Listing published successfully!", { id: loadingToast });
+    } catch (e: any) {
+      console.error("Approve error:", e);
+      toast.error("Failed to approve: " + e.message, { id: loadingToast });
+    }
+  };
+
+  const [listingTab, setListingTab] = useState<'all' | 'pending' | 'active'>('pending');
+
+  // Filter listings based on tab
+  const filteredListings = listings.filter(l => {
+    if (listingTab === 'all') return true;
+    return l.status === listingTab;
+  });
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse flex flex-col items-center"><div className="w-12 h-12 border-4 border-teal-900 border-t-transparent rounded-full animate-spin"></div><p className="mt-4 text-teal-900 font-medium">Loading...</p></div></div>;
@@ -144,33 +209,46 @@ export default function Admin() {
   // If it is the right email, ask for the password
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto mt-20 bg-white p-8 rounded-2xl shadow-xl">
+      <div className="max-w-md mx-auto mt-20 bg-white p-8 rounded-2xl shadow-xl border border-stone-100">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldAlert className="w-8 h-8 text-red-600" />
+          <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-teal-100">
+            <ShieldAlert className="w-8 h-8 text-teal-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Password</h1>
-          <p className="text-gray-500 text-sm mt-2">Enter admin master password to proceed</p>
+          <h1 className="text-2xl font-bold text-stone-900">Admin Authorization</h1>
+          <p className="text-stone-500 text-sm mt-2">Authenticated as: <span className="font-semibold text-teal-700">{currentUser?.email}</span></p>
+          <p className="text-stone-400 text-xs mt-1 italic">Enter the secondary master password</p>
         </div>
 
-        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+        <form onSubmit={handlePasswordSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Admin Password</label>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Master Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="••••••••••••"
+              className="w-full px-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all outline-none"
               required
+              autoFocus
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-teal-900 text-white font-semibold py-3 rounded-lg hover:bg-teal-800 transition-colors"
+            className="w-full bg-teal-900 text-white font-bold py-4 rounded-xl hover:bg-teal-800 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 group"
           >
             Access Dashboard
+            <div className="w-2 h-2 bg-teal-400 rounded-full group-hover:animate-ping"></div>
           </button>
         </form>
+        
+        <div className="mt-6 pt-6 border-t border-stone-100 text-center">
+          <button 
+            onClick={() => auth.signOut()}
+            className="text-stone-400 text-sm hover:text-red-500 transition-colors"
+          >
+            Not your admin account? Logout
+          </button>
+        </div>
       </div>
     );
   }
@@ -187,21 +265,62 @@ export default function Admin() {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Listings Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 space-y-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-teal-600" /> All Listings ({listings.length})
+              <ShoppingBag className="w-5 h-5 text-teal-600" /> Listings Management
             </h2>
+            <div className="flex bg-stone-200 p-1 rounded-lg">
+              {(['pending', 'active', 'all'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setListingTab(tab)}
+                  className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                    listingTab === tab 
+                      ? 'bg-white text-teal-900 shadow-sm' 
+                      : 'text-stone-500 hover:text-stone-700'
+                  }`}
+                >
+                  {tab.toUpperCase()} ({listings.filter(l => tab === 'all' || l.status === tab).length})
+                </button>
+              ))}
+            </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
-            {listings.map(l => (
+            {filteredListings.map(l => (
               <div key={l.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                <div>
-                  <h3 className="font-medium text-gray-900">{l.title}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-900">{l.title}</h3>
+                    {l.status === 'pending' ? (
+                      <span className="flex items-center gap-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <Clock className="w-3 h-3" /> Pending
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <CheckCircle className="w-3 h-3" /> Active
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500">₹{l.price} • {l.category}</p>
                 </div>
-                <button onClick={() => deleteListing(l.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {l.status === 'pending' && (
+                    <button 
+                      onClick={() => approveListing(l.id)}
+                      className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                      title="Approve Listing"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => deleteListing(l.id)} 
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Listing"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             ))}
             {listings.length === 0 && <div className="p-8 text-center text-gray-500">No listings found.</div>}

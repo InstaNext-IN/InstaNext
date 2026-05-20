@@ -45,6 +45,7 @@ export const useAuth = () => useContext(AuthContext);
 
 import LoginModal from "./components/LoginModal";
 import IOSInstallModal from "./components/IOSInstallModal";
+import { Toaster } from "react-hot-toast";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -145,6 +146,7 @@ export default function App() {
           </main>
           <LoginModal />
           <IOSInstallModal />
+          <Toaster position="top-center" />
         </div>
       </Router>
     </AuthContext.Provider>

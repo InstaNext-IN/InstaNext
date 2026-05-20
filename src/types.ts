@@ -25,7 +25,7 @@ export interface Listing {
     address: string;
   };
   isVerified: boolean;
-  status?: 'active' | 'sold' | 'deleted';
+  status?: 'active' | 'sold' | 'deleted' | 'pending';
   condition?: string;
   state?: string;
   district?: string;

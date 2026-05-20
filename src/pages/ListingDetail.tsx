@@ -27,6 +27,9 @@ export default function ListingDetail() {
   const isFavorited = currentUser?.favorites?.includes(listing?.id || "");
   const thirtyDaysAgo = new Date().getTime() - 30 * 24 * 60 * 60 * 1000;
   const isExpired = listing && new Date(listing.createdAt).getTime() <= thirtyDaysAgo;
+  const isPending = listing?.status === "pending";
+  const isAdmin = currentUser?.email === "secondinnings17@gmail.com";
+  const canViewPending = currentUser?.uid === listing?.sellerId || isAdmin;
 
   const toggleFavorite = async () => {
     if (!currentUser || !listing) {
@@ -195,6 +198,21 @@ export default function ListingDetail() {
       animate={{ opacity: 1 }}
       className="grid grid-cols-1 lg:grid-cols-2 gap-12"
     >
+      {/* Pending status warning */}
+      {isPending && (
+        <div className="col-span-full mb-6 p-6 bg-amber-50 border border-amber-200 rounded-3xl flex items-start space-x-4">
+          <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+          <div className="space-y-1">
+            <h4 className="font-bold text-amber-900">Pending Approval</h4>
+            <p className="text-amber-700 text-sm">
+              {currentUser?.uid === listing.sellerId 
+                ? "Your listing is currently under review by our moderation team. It will be visible to everyone once authorized."
+                : "This listing is currently under review and is not yet public."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Images */}
       <div className="space-y-4">
         <div className="aspect-square bg-white rounded-3xl overflow-hidden shadow-xl border border-stone-100 relative">

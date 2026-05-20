@@ -8,6 +8,7 @@ import cors from "cors";
 async function startServer() {
   const app = express();
   const httpServer = createHttpServer(app);
+  
   const io = new Server(httpServer, {
     cors: {
       origin: "*",

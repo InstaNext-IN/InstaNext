@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
     // Helper Functions
     function isAuthenticated() {
       return request.auth != null;
@@ -39,16 +44,28 @@ service cloud.firestore {
 
     // Listings
     match /listings/{listingId} {
-      allow read: if true;
+      allow read: if (resource == null) || (resource.data.status == 'active') || 
+                  (isAuthenticated() && resource.data.sellerId == request.auth.uid) || 
+                  isAdmin();
       allow create: if (isAuthenticated() && isValidListing(request.resource.data) &&
-                      request.resource.data.sellerId == request.auth.uid) || isAdmin();
+                      request.resource.data.sellerId == request.auth.uid &&
+                      (request.resource.data.status == 'pending' || isAdmin())
+                      ) || isAdmin();
       allow update: if (isAuthenticated() && resource.data.sellerId == request.auth.uid &&
-                      isValidListing(request.resource.data)) || isAdmin();
+                      isValidListing(request.resource.data) &&
+                      (request.resource.data.status == resource.data.status || isAdmin())
+                      ) || isAdmin();
       allow delete: if (isAuthenticated() && resource.data.sellerId == request.auth.uid) || isAdmin();
     }
 
     // Reports
     match /reports/{reportId} {
+      allow create: if isAuthenticated();
+      allow read, delete, update: if isAdmin();
+    }
+
+    // Support Tickets
+    match /support_tickets/{ticketId} {
       allow create: if isAuthenticated();
       allow read, delete, update: if isAdmin();
     }

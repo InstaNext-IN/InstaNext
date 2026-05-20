@@ -5,23 +5,12 @@ import { db } from "../firebase";
 import { useAuth } from "../App";
 import { Camera, Upload, Loader2, ShieldCheck, AlertCircle, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
+import { removeBackground } from "@imgly/background-removal";
 import { GoogleGenAI } from "@google/genai";
 import { OperationType, handleFirestoreError } from "../firebase";
-import { removeBackground } from "@imgly/background-removal";
 import LocationSelector from "../components/LocationSelector";
 
-let aiInstance: GoogleGenAI | null = null;
-const getAI = () => {
-  if (!aiInstance) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      console.warn("GEMINI_API_KEY is missing. Image moderation will be skipped.");
-      return null;
-    }
-    aiInstance = new GoogleGenAI({ apiKey: key });
-  }
-  return aiInstance;
-};
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export default function Sell() {
   const { user } = useAuth();
@@ -116,30 +105,29 @@ export default function Sell() {
       setPreview(compressedBase64);
       
       // 3. Moderate image using Gemini
-      const ai = getAI();
-      if (!ai) {
-        setProcessing(false);
-        return;
-      }
-
       setModerating(true);
       try {
-        const model = "gemini-3-flash-preview";
         const result = await ai.models.generateContent({
-          model,
-          contents: [
-            {
-              parts: [
-                { inlineData: { data: compressedBase64.split(",")[1], mimeType: "image/jpeg" } },
-                { text: "Analyze this image for a marketplace listing. Is it a clear photo of a product? Reject if it contains faces, blurred objects, text only, or inappropriate content. Respond with 'SAFE' or 'REJECT: [reason]'." }
-              ]
-            }
-          ]
+          model: "gemini-3-flash-preview",
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  data: compressedBase64.split(",")[1],
+                  mimeType: "image/jpeg"
+                }
+              },
+              {
+                text: "Analyze this image. You are a content moderator for a family-friendly marketplace. Strictly reject any images containing: 1. Nudity or sexually suggestive content. 2. Violence or disturbing/gory imagery. 3. Offensive symbols or hate speech. 4. Generic faces or people. 5. Obvious junk/blur. If safe and a clear product, respond ONLY with 'SAFE'. Otherwise respond with 'REJECT: [reason]'."
+              }
+            ]
+          }
         });
-
-        const response = result.text;
-        if (response?.includes("REJECT")) {
-          setError(response);
+        
+        const responseText = result.text;
+        
+        if (responseText?.includes("REJECT")) {
+          setError(responseText);
           setPreview(null);
         }
       } catch (err) {
@@ -192,7 +180,7 @@ export default function Sell() {
           address: `${formData.area}, ${formData.city}, ${formData.district}, ${formData.state}`
         },
         isVerified: user.isVerified,
-        status: 'active',
+        status: 'pending',
         createdAt: new Date().toISOString()
       };
 
@@ -340,7 +328,7 @@ export default function Sell() {
 
         <button
           type="submit"
-          disabled={loading || moderating || !!error}
+          disabled={loading || moderating || processing}
           className="w-full bg-gold-500 text-teal-900 py-4 rounded-2xl font-black text-lg uppercase tracking-widest hover:bg-gold-600 transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ShieldCheck className="w-6 h-6" />}

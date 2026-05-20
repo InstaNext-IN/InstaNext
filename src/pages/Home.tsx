@@ -42,9 +42,12 @@ export default function Home() {
     const unsubscribe = onSnapshot(qListing, (snapshot) => {
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Listing));
       
-      // Filter out deleted and expired items
+      // Only show active listings
+      data = data.filter(l => l.status === 'active');
+      
+      // Filter out expired items (older than 30 days)
       const thirtyDaysAgo = new Date().getTime() - 30 * 24 * 60 * 60 * 1000;
-      data = data.filter(l => l.status !== 'deleted' && new Date(l.createdAt).getTime() > thirtyDaysAgo);
+      data = data.filter(l => new Date(l.createdAt).getTime() > thirtyDaysAgo);
       
       // Filter by category
       if (selectedCategory !== "All") {
