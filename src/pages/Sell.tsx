@@ -205,7 +205,7 @@ export default function Sell() {
           <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('photo') ? 'text-red-500' : 'text-stone-700'}`}>Product Photo</label>
           <div className={`relative aspect-video bg-stone-50 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center overflow-hidden group hover:border-teal-500 transition-colors ${emptyFields.includes('photo') ? 'border-red-500' : 'border-stone-200'}`}>
             {preview ? (
-              <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={preview} alt="Preview" className="w-full h-full object-contain bg-stone-100" />
             ) : (
               <div className="text-center space-y-2">
                 <Camera className={`w-12 h-12 mx-auto ${emptyFields.includes('photo') ? 'text-red-300' : 'text-stone-300'}`} />
@@ -270,12 +270,28 @@ export default function Sell() {
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full bg-stone-50 border-stone-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
             >
+              <option>Properties</option>
               <option>Mobiles</option>
               <option>Electronics</option>
               <option>Furniture</option>
               <option>Vehicles</option>
               <option>Books</option>
               <option>Fashion</option>
+              <option>Toys & Games</option>
+              <option>Pet Supplies</option>
+              <option>Sports & Outdoors</option>
+              <option>Home & Garden</option>
+              <option>Beauty & Personal Care</option>
+              <option>Health & Fitness</option>
+              <option>Tools & Home Improvement</option>
+              <option>Arts & Crafts</option>
+              <option>Musical Instruments</option>
+              <option>Office Supplies</option>
+              <option>Industrial & Scientific</option>
+              <option>Antiques & Collectibles</option>
+              <option>Real Estate</option>
+              <option>Services</option>
+              <option>Jobs</option>
               <option>Other</option>
             </select>
           </div>

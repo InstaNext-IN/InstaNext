@@ -99,7 +99,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/400/400"}
             alt={listing.title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
+            className={`w-full h-full object-contain bg-stone-100 transition-transform duration-500 group-hover:scale-110 ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
             loading="lazy"
             decoding="async"

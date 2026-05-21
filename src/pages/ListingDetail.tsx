@@ -219,7 +219,7 @@ export default function ListingDetail() {
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/800/800"}
             alt={listing.title}
-            className={`w-full h-full object-cover ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
+            className={`w-full h-full object-contain bg-stone-100 ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
             loading="lazy"
             decoding="async"
@@ -256,8 +256,8 @@ export default function ListingDetail() {
         </div>
         <div className="grid grid-cols-4 gap-4">
           {listing.images.slice(1).map((img, i) => (
-            <div key={i} className="aspect-square bg-white rounded-xl overflow-hidden shadow-md border border-stone-100">
-              <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <div key={i} className="aspect-square bg-stone-100 rounded-xl overflow-hidden shadow-md border border-stone-100">
+              <img src={img} alt="" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
           ))}
         </div>

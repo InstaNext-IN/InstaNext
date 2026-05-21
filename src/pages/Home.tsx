@@ -28,12 +28,28 @@ export default function Home() {
 
   const categories = [
     { name: "All", icon: LayoutGrid },
+    { name: "Properties", icon: Package },
     { name: "Mobiles", icon: Smartphone },
     { name: "Electronics", icon: Monitor },
     { name: "Furniture", icon: Sofa },
     { name: "Vehicles", icon: Car },
     { name: "Books", icon: Book },
     { name: "Fashion", icon: Shirt },
+    { name: "Toys & Games", icon: Package },
+    { name: "Pet Supplies", icon: Package },
+    { name: "Sports & Outdoors", icon: Package },
+    { name: "Home & Garden", icon: Package },
+    { name: "Beauty & Personal Care", icon: Package },
+    { name: "Health & Fitness", icon: Package },
+    { name: "Tools & Home Improvement", icon: Package },
+    { name: "Arts & Crafts", icon: Package },
+    { name: "Musical Instruments", icon: Package },
+    { name: "Office Supplies", icon: Package },
+    { name: "Industrial & Scientific", icon: Package },
+    { name: "Antiques & Collectibles", icon: Package },
+    { name: "Real Estate", icon: Package },
+    { name: "Services", icon: Package },
+    { name: "Jobs", icon: Package },
     { name: "Other", icon: Package },
   ];
 
