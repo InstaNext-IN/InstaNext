@@ -101,6 +101,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             alt={listing.title}
             className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
           />
           {listing.status === 'sold' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">

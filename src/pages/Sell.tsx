@@ -6,7 +6,6 @@ import { useAuth } from "../App";
 import { Camera, Upload, Loader2, ShieldCheck, AlertCircle, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
 import imageCompression from "browser-image-compression";
-import { removeBackground } from "@imgly/background-removal";
 import { GoogleGenAI } from "@google/genai";
 import { OperationType, handleFirestoreError } from "../firebase";
 import LocationSelector from "../components/LocationSelector";
@@ -85,18 +84,11 @@ export default function Sell() {
     setPreview(null);
 
     try {
-      // 1. Remove background
-      const processedBlob = await removeBackground(file, {
-        progress: (status, progress) => {
-          console.log(`Background removal: ${status} ${Math.round(progress * 100)}%`);
-        }
-      });
-
-      // 2. Convert to JPG and compress < 100kb
-      const compressedBase64 = await compressImage(processedBlob);
+      // Convert to JPG and compress < 100kb
+      const compressedBase64 = await compressImage(file);
       setPreview(compressedBase64);
       
-      // 3. Moderate image using Gemini
+      // Moderate image using Gemini
       setModerating(true);
       try {
         const result = await ai.models.generateContent({

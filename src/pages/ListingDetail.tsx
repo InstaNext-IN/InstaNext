@@ -221,6 +221,8 @@ export default function ListingDetail() {
             alt={listing.title}
             className={`w-full h-full object-cover ${(listing.status === 'sold' || isExpired) ? 'grayscale opacity-70' : ''}`}
             referrerPolicy="no-referrer"
+            loading="lazy"
+            decoding="async"
           />
           {listing.status === 'sold' && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
