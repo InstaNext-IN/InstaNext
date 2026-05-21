@@ -5,6 +5,7 @@ import { db } from "../firebase";
 import { useAuth } from "../App";
 import { Camera, Upload, Loader2, ShieldCheck, AlertCircle, Scissors } from "lucide-react";
 import { motion } from "framer-motion";
+import imageCompression from "browser-image-compression";
 import { removeBackground } from "@imgly/background-removal";
 import { GoogleGenAI } from "@google/genai";
 import { OperationType, handleFirestoreError } from "../firebase";
@@ -35,54 +36,44 @@ export default function Sell() {
   });
 
   const compressImage = async (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
+    // Fill white background for JPG first since background removal leaves it transparent
+    const fileWithWhiteBg = await new Promise<File>((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject("Canvas context not available");
 
-        // Set dimensions (max 1200px)
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1200;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = (height / width) * maxDim;
-            width = maxDim;
-          } else {
-            width = (width / height) * maxDim;
-            height = maxDim;
-          }
-        }
+        canvas.width = img.width;
+        canvas.height = img.height;
 
-        canvas.width = width;
-        canvas.height = height;
-
-        // Fill white background for JPG
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Iteratively compress to get under 100kb
-        let quality = 0.9;
-        const attemptCompression = () => {
-          const base64 = canvas.toDataURL("image/jpeg", quality);
-          const size = Math.round((base64.length * 3) / 4) / 1024; // approx size in kb
-
-          if (size < 100 || quality < 0.1) {
-            resolve(base64);
-          } else {
-            quality -= 0.1;
-            attemptCompression();
-          }
-        };
-
-        attemptCompression();
+        canvas.toBlob((b) => {
+          if (b) resolve(new File([b], "image.jpg", { type: "image/jpeg" }));
+          else reject("Failed to create blob");
+        }, "image/jpeg", 1.0);
       };
       img.onerror = reject;
       img.src = URL.createObjectURL(blob);
     });
+
+    const options = {
+      maxSizeMB: 0.098, // just under 100kb
+      maxWidthOrHeight: 1280, // resize larger images to preserve quality over raw compression
+      useWebWorker: true,
+      fileType: "image/jpeg"
+    };
+
+    try {
+      const compressedFile = await imageCompression(fileWithWhiteBg, options);
+      return await imageCompression.getDataUrlFromFile(compressedFile);
+    } catch (error) {
+      console.error("Compression error:", error);
+      throw error;
+    }
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
