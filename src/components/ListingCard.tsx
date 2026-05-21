@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Listing } from "../types";
-import { BadgeCheck, MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag, RotateCw } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag, RotateCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../App";
 import { db, auth, OperationType, handleFirestoreError } from "../firebase";
@@ -116,12 +116,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               </span>
             </div>
           )}
-          {listing.isVerified && (
-            <div className="absolute top-3 right-3 bg-gold-500 text-teal-900 px-2 py-1 rounded-full text-xs font-bold flex items-center space-x-1 shadow-md">
-              <BadgeCheck className="w-3 h-3" />
-              <span>Verified</span>
-            </div>
-          )}
+
           <button
             onClick={toggleFavorite}
             disabled={favLoading}

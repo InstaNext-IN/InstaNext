@@ -351,9 +351,6 @@ export default function ListingDetail() {
                 <div>
                   <div className="flex items-center space-x-2">
                     <h3 className="font-bold text-xl group-hover:underline">{seller.displayName}</h3>
-                    {seller.isVerified && (
-                      <BadgeCheck className="w-5 h-5 text-gold-500" />
-                    )}
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
                     <div className="flex items-center text-gold-400">
