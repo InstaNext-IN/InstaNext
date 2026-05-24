@@ -93,7 +93,7 @@ export default function SellerProfile() {
         
         <div className="relative z-10 text-center md:text-left flex-1">
           <h1 className="text-4xl font-bold text-white flex items-center justify-center md:justify-start space-x-2">
-            <span>{seller.displayName}</span>
+            <span>InstaNext.in User</span>
           </h1>
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
             <div className="flex items-center space-x-2 bg-teal-800/50 px-4 py-2 rounded-full text-sm font-semibold">
@@ -119,7 +119,7 @@ export default function SellerProfile() {
         transition={{ delay: 0.1 }}
         className="space-y-6"
       >
-        <h2 className="text-2xl font-bold text-stone-900">More from {seller.displayName}</h2>
+        <h2 className="text-2xl font-bold text-stone-900">More from InstaNext.in User</h2>
         
         {listingsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

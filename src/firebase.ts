@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, query, where, orderBy, getDocs, getDocFromServer } from "firebase/firestore";
 import firebaseConfig from "../firebase-applet-config.json";
@@ -6,6 +7,15 @@ import firebaseConfig from "../firebase-applet-config.json";
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+// Initialize Analytics conditionally as it might not be supported in some environments (like Node.js or older browsers without indexedDB)
+export let analytics: any = null;
+isSupported().then((supported) => {
+  if (supported) {
+    analytics = getAnalytics(app);
+  }
+});
+
 
 export enum OperationType {
   CREATE = 'create',
