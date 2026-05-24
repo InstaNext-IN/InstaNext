@@ -94,7 +94,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       whileHover={{ y: -5 }}
       className={`bg-white rounded-2xl shadow-sm border ${isExpired ? 'border-red-200' : 'border-stone-100'} overflow-hidden group flex flex-col h-full`}
     >
-      <Link to={`/listing/${listing.id}`} className="flex-1 flex flex-col relative">
+      <div 
+        onClick={() => navigate(`/listing/${listing.id}`)} 
+        className="flex-1 flex flex-col relative cursor-pointer"
+      >
         <div className="relative aspect-square overflow-hidden bg-stone-100">
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/400/400"}
@@ -182,7 +185,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           </div>
           <p className="text-stone-500 text-sm line-clamp-2 flex-1">{listing.description}</p>
         </div>
-      </Link>
+      </div>
       
       {isOwner && isExpired && listing.status !== 'sold' && (
         <div className="p-4 pt-0">

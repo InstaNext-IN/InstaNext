@@ -25,6 +25,36 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [locationFetched, setLocationFetched] = useState(false);
+
+  useEffect(() => {
+    if (!locationFetched && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            const address = data.address;
+            if (address.state || address.region) setFilterState(address.state || address.region);
+            if (address.state_district || address.county || address.district) setFilterDistrict(address.state_district || address.county || address.district);
+            if (address.city || address.town || address.village || address.county) setFilterCity(address.city || address.town || address.village || address.county);
+          } catch (e) {
+            console.error("Error fetching location details:", e);
+          } finally {
+            setLocationFetched(true);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationFetched(true);
+        }
+      );
+    } else if (!navigator.geolocation) {
+      setLocationFetched(true);
+    }
+  }, [locationFetched]);
 
   const categories = [
     { name: "All", icon: LayoutGrid },
