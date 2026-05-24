@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../App";
-import { Camera, Upload, Loader2, ShieldCheck, AlertCircle, Scissors } from "lucide-react";
+import { Camera, Upload, Loader2, ShieldCheck, AlertCircle, Scissors, X } from "lucide-react";
 import { motion } from "framer-motion";
 import imageCompression from "browser-image-compression";
 import { GoogleGenAI } from "@google/genai";
@@ -20,7 +20,7 @@ export default function Sell() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emptyFields, setEmptyFields] = useState<string[]>([]);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -112,55 +112,72 @@ export default function Sell() {
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (previews.length + files.length > 5) {
+      setError("You can only upload up to 5 images.");
+      return;
+    }
 
     setProcessing(true);
     setError(null);
-    setPreview(null);
+
+    const newPreviews: string[] = [];
 
     try {
-      // Convert to JPG and compress < 100kb
-      const compressedBase64 = await compressImage(file);
-      setPreview(compressedBase64);
-      
-      // Moderate image using Gemini
-      setModerating(true);
-      try {
-        const result = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: {
-            parts: [
-              {
-                inlineData: {
-                  data: compressedBase64.split(",")[1],
-                  mimeType: "image/jpeg"
+      for (const file of files) {
+        // Convert to JPG and compress < 100kb
+        const compressedBase64 = await compressImage(file);
+        
+        // Moderate image using Gemini
+        setModerating(true);
+        try {
+          const result = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    data: compressedBase64.split(",")[1],
+                    mimeType: "image/jpeg"
+                  }
+                },
+                {
+                  text: "Analyze this image. You are a content moderator for a family-friendly marketplace. Strictly reject any images containing: 1. Nudity or sexually suggestive content. 2. Violence or disturbing/gory imagery. 3. Offensive symbols or hate speech. 4. Generic faces or people. 5. Obvious junk/blur. If safe and a clear product, respond ONLY with 'SAFE'. Otherwise respond with 'REJECT: [reason]'."
                 }
-              },
-              {
-                text: "Analyze this image. You are a content moderator for a family-friendly marketplace. Strictly reject any images containing: 1. Nudity or sexually suggestive content. 2. Violence or disturbing/gory imagery. 3. Offensive symbols or hate speech. 4. Generic faces or people. 5. Obvious junk/blur. If safe and a clear product, respond ONLY with 'SAFE'. Otherwise respond with 'REJECT: [reason]'."
-              }
-            ]
+              ]
+            }
+          });
+          
+          const responseText = result.text;
+          
+          if (responseText?.includes("REJECT")) {
+            setError(`Image ${file.name} rejected: ${responseText}`);
+            // Skip this image
+            continue;
+          } else {
+            newPreviews.push(compressedBase64);
           }
-        });
-        
-        const responseText = result.text;
-        
-        if (responseText?.includes("REJECT")) {
-          setError(responseText);
-          setPreview(null);
+        } catch (err) {
+          console.error(`Moderation error for ${file.name}`, err);
+          setError(`Moderation failed for ${file.name}`);
+        } finally {
+          setModerating(false);
         }
-      } catch (err) {
-        console.error("Moderation error", err);
-      } finally {
-        setModerating(false);
       }
+
+      setPreviews(prev => [...prev, ...newPreviews]);
     } catch (err) {
       console.error("Image processing error", err);
-      setError("Failed to process image. Please try a different photo.");
+      setError("Failed to process some images. Please try different photos.");
     } finally {
       setProcessing(false);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,7 +189,7 @@ export default function Sell() {
     
     // Validate fields
     const missing: string[] = [];
-    if (!preview) missing.push("photo");
+    if (previews.length === 0) missing.push("photo");
     if (!formData.title.trim()) missing.push("title");
     if (!formData.price.toString().trim()) missing.push("price");
     if (!formData.description.trim()) missing.push("description");
@@ -201,7 +218,7 @@ export default function Sell() {
         district: formData.district,
         city: formData.city.trim(),
         area: formData.area.trim(),
-        images: [preview],
+        images: previews,
         location: {
           lat: 0,
           lng: 0,
@@ -236,39 +253,49 @@ export default function Sell() {
 
       <form onSubmit={handleSubmit} className="p-8 space-y-6">
         {/* Image Upload */}
-        <div className="space-y-2">
-          <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('photo') ? 'text-red-500' : 'text-stone-700'}`}>Product Photo</label>
-          <div className={`relative aspect-video bg-stone-50 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center overflow-hidden group hover:border-teal-500 transition-colors ${emptyFields.includes('photo') ? 'border-red-500' : 'border-stone-200'}`}>
-            {preview ? (
-              <img src={preview} alt="Preview" className="w-full h-full object-contain bg-stone-100" />
-            ) : (
-              <div className="text-center space-y-2">
-                <Camera className={`w-12 h-12 mx-auto ${emptyFields.includes('photo') ? 'text-red-300' : 'text-stone-300'}`} />
-                <p className={`text-sm ${emptyFields.includes('photo') ? 'text-red-400' : 'text-stone-400'}`}>Click to upload or drag & drop</p>
+        <div className="space-y-4">
+          <label className={`block text-sm font-bold uppercase tracking-wider ${emptyFields.includes('photo') ? 'text-red-500' : 'text-stone-700'}`}>Product Photos (up to 5)</label>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {previews.map((preview, index) => (
+              <div key={index} className="relative aspect-square rounded-2xl overflow-hidden border border-stone-200 group">
+                <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-50 text-stone-700 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-            />
-            {processing && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-2">
-                <Scissors className="w-8 h-8 text-teal-600 animate-bounce" />
-                <p className="text-teal-900 font-semibold">Removing Background...</p>
-              </div>
-            )}
-            {moderating && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center space-y-2">
-                <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
-                <p className="text-teal-900 font-semibold">AI Moderating...</p>
+            ))}
+            
+            {previews.length < 5 && (
+              <div className={`relative aspect-square bg-stone-50 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center overflow-hidden group hover:border-teal-500 transition-colors ${(emptyFields.includes('photo') && previews.length === 0) ? 'border-red-500' : 'border-stone-200'}`}>
+                <div className="text-center space-y-2 p-4">
+                  <Camera className={`w-8 h-8 mx-auto ${(emptyFields.includes('photo') && previews.length === 0) ? 'text-red-300' : 'text-stone-300'}`} />
+                  <p className={`text-xs font-medium ${(emptyFields.includes('photo') && previews.length === 0) ? 'text-red-400' : 'text-stone-500'}`}>Add Photo</p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                {(processing || moderating) && (
+                  <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-2">
+                    <Loader2 className="w-6 h-6 text-teal-600 animate-spin" />
+                    <p className="text-teal-900 font-semibold text-xs text-center px-2">{moderating ? "Checking..." : "Processing..."}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
+
           {error && (
             <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-xl text-sm">
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
