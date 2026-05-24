@@ -47,6 +47,8 @@ import LoginModal from "./components/LoginModal";
 import IOSInstallModal from "./components/IOSInstallModal";
 import { Toaster } from "react-hot-toast";
 
+import ScrollToTop from "./components/ScrollToTop";
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,6 +130,7 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, loading, showLoginModal, setShowLoginModal, deferredPrompt, installApp, isIOS, isStandalone, showIOSInstallPrompt, setShowIOSInstallPrompt }}>
       <Router>
+        <ScrollToTop />
         <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
           <Header />
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

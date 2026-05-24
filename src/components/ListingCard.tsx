@@ -92,12 +92,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      className={`bg-white rounded-2xl shadow-sm border ${isExpired ? 'border-red-200' : 'border-stone-100'} overflow-hidden group flex flex-col h-full`}
+      className={`bg-white rounded-2xl shadow-sm border ${isExpired ? 'border-red-200' : 'border-stone-100'} overflow-hidden group flex flex-col h-full relative`}
     >
-      <div 
-        onClick={() => navigate(`/listing/${listing.id}`)} 
-        className="flex-1 flex flex-col relative cursor-pointer"
-      >
+      <Link to={`/listing/${listing.id}`} className="absolute inset-0 z-0" aria-label={`View details of ${listing.title}`} />
+      
+      <div className="flex-1 flex flex-col relative pointer-events-none">
         <div className="relative aspect-square overflow-hidden bg-stone-100">
           <img
             src={listing.images[0] || "https://picsum.photos/seed/product/400/400"}
@@ -125,7 +124,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <button
             onClick={toggleFavorite}
             disabled={favLoading}
-            className="absolute top-3 left-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
+            className="absolute top-3 left-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors pointer-events-auto z-10"
           >
             <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-stone-500'}`} />
           </button>
@@ -145,7 +144,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 alert("Link copied to clipboard!");
               }
             }}
-            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
+            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors pointer-events-auto z-10"
           >
             <Share2 className="w-4 h-4 text-stone-500" />
           </button>
@@ -188,7 +187,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       </div>
       
       {isOwner && isExpired && listing.status !== 'sold' && (
-        <div className="p-4 pt-0">
+        <div className="p-4 pt-0 relative z-10 pointer-events-auto">
           <button
             onClick={handleRepost}
             disabled={repostLoading}
@@ -205,7 +204,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
       )}
       
       {!isOwner && listing.status !== 'sold' && !isExpired && (
-        <div className="p-4 pt-0">
+        <div className="p-4 pt-0 relative z-10 pointer-events-auto">
           <button
             onClick={startChat}
             disabled={chatLoading}
