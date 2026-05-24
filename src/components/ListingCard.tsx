@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Listing } from "../types";
-import { MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag, RotateCw } from "lucide-react";
+import { MapPin, MessageCircle, Loader2, Heart, TrendingDown, Tag, RotateCw, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../App";
 import { db, auth, OperationType, handleFirestoreError } from "../firebase";
@@ -125,6 +125,26 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             className="absolute top-3 left-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
           >
             <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-stone-500'}`} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const url = `${window.location.origin}/listing/${listing.id}`;
+              if (navigator.share) {
+                navigator.share({
+                  title: listing.title,
+                  text: `Check out this ${listing.title} on Second Innings!`,
+                  url: url,
+                }).catch(console.error);
+              } else {
+                navigator.clipboard.writeText(url);
+                alert("Link copied to clipboard!");
+              }
+            }}
+            className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors"
+          >
+            <Share2 className="w-4 h-4 text-stone-500" />
           </button>
         </div>
         <div className="p-4 space-y-2 flex-1 flex flex-col">

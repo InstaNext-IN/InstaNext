@@ -34,6 +34,42 @@ export default function Sell() {
     area: ""
   });
 
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await res.json();
+            const address = data.address;
+            setFormData(p => ({
+              ...p,
+              state: address.state || address.region || "",
+              district: address.state_district || address.county || address.district || "",
+              city: address.city || address.town || address.village || address.county || "",
+              area: address.suburb || address.neighbourhood || address.county || ""
+            }));
+          } catch (e) {
+            console.error(e);
+            setError("Failed to fetch location. Please ensure you have internet connection.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          console.error(error);
+          setLoading(false);
+          setError("Location access denied. Please enable location to post an ad.");
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by your browser.");
+    }
+  }, []);
+
   const compressImage = async (blob: Blob): Promise<string> => {
     // Fill white background for JPG first since background removal leaves it transparent
     const fileWithWhiteBg = await new Promise<File>((resolve, reject) => {
@@ -143,7 +179,6 @@ export default function Sell() {
     if (!formData.state) missing.push("state");
     if (!formData.district) missing.push("district");
     if (!formData.city.trim()) missing.push("city");
-    if (!formData.area.trim()) missing.push("area");
 
     setEmptyFields(missing);
 
@@ -328,6 +363,7 @@ export default function Sell() {
             city={formData.city} setCity={(val) => setFormData(p => ({ ...p, city: val }))}
             area={formData.area} setArea={(val) => setFormData(p => ({ ...p, area: val }))}
             standalone={true}
+            disabled={true}
             errors={emptyFields}
           />
         </div>

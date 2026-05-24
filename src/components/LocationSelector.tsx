@@ -12,6 +12,7 @@ interface LocationSelectorProps {
   setArea: (val: string) => void;
   standalone?: boolean;
   errors?: string[];
+  disabled?: boolean;
 }
 
 export default function LocationSelector({ 
@@ -20,7 +21,8 @@ export default function LocationSelector({
   city, setCity, 
   area, setArea,
   standalone = false,
-  errors = []
+  errors = [],
+  disabled = false
 }: LocationSelectorProps) {
   const statesList = statesData.states || [];
   const currentDistricts = statesList.find((s: any) => s.state === state)?.districts || [];
@@ -33,7 +35,8 @@ export default function LocationSelector({
           <select 
             value={state} 
             onChange={e => { setState(e.target.value); setDistrict(""); }}
-            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700 ${errors.includes('state') ? 'border-red-500' : 'border-stone-200'}`}
+            disabled={disabled}
+            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700 ${disabled ? 'opacity-50 cursor-not-allowed bg-stone-100' : ''} ${errors.includes('state') ? 'border-red-500' : 'border-stone-200'}`}
           >
             <option value="">Select State</option>
             {statesList.map((s: any) => <option key={s.state} value={s.state}>{s.state}</option>)}
@@ -44,8 +47,8 @@ export default function LocationSelector({
           <select 
             value={district} 
             onChange={e => setDistrict(e.target.value)}
-            disabled={!state}
-            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700 disabled:opacity-50 ${errors.includes('district') ? 'border-red-500' : 'border-stone-200'}`}
+            disabled={disabled || !state}
+            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-stone-100 ${errors.includes('district') ? 'border-red-500' : 'border-stone-200'}`}
           >
             <option value="">Select District</option>
             {currentDistricts.map((d: string) => <option key={d} value={d}>{d}</option>)}
@@ -59,12 +62,13 @@ export default function LocationSelector({
             type="text" 
             value={city} 
             onChange={e => setCity(e.target.value)}
+            disabled={disabled}
             placeholder="e.g. Pune"
-            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-stone-700 ${errors.includes('city') ? 'border-red-500' : 'border-stone-200'}`}
+            className={`w-full bg-stone-50 border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-stone-700 ${disabled ? 'opacity-50 cursor-not-allowed bg-stone-100' : ''} ${errors.includes('city') ? 'border-red-500' : 'border-stone-200'}`}
           />
         </div>
         <div className="space-y-2">
-          <label className={`block text-xs font-bold uppercase tracking-wider ${errors.includes('area') ? 'text-red-500' : 'text-stone-500'}`}>Particular Area Name</label>
+          <label className={`block text-xs font-bold uppercase tracking-wider ${errors.includes('area') ? 'text-red-500' : 'text-stone-500'}`}>Particular Area Name (Optional)</label>
           <input 
             type="text" 
             value={area} 
