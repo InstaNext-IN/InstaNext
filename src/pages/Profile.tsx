@@ -260,7 +260,7 @@ export default function Profile() {
                         className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
                       />
                       <div className="text-left">
-                        <h4 className="font-bold text-stone-900">InstaNext.in User</h4>
+                        <h4 className="font-bold text-stone-900">{chat.otherUser?.displayName || "User"}</h4>
                         <p className="text-xs text-stone-500 truncate max-w-[200px]">
                           {chat.lastMessage || `About: ${chat.listing?.title}`}
                         </p>

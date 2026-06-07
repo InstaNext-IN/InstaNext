@@ -137,11 +137,15 @@ export default function ListingDetail() {
         const listingData = { id: docSnap.id, ...docSnap.data() } as Listing;
         setListing(listingData);
         
-        // Fetch seller info
-        const sellerRef = doc(db, "users", listingData.sellerId);
-        const sellerSnap = await getDoc(sellerRef);
-        if (sellerSnap.exists()) {
-          setSeller(sellerSnap.data() as User);
+        // Fetch seller info safely
+        try {
+          const sellerRef = doc(db, "users", listingData.sellerId);
+          const sellerSnap = await getDoc(sellerRef);
+          if (sellerSnap.exists()) {
+            setSeller(sellerSnap.data() as User);
+          }
+        } catch (e) {
+          console.warn("Could not fetch seller info:", e);
         }
 
         // Fetch similar items
@@ -150,7 +154,6 @@ export default function ListingDetail() {
           where("category", "==", listingData.category),
           limit(5)
         );
-        const similarSnap = await getDoc(sellerRef); // Just to trigger, we'll use onSnapshot for similar
         onSnapshot(qSimilar, (snap) => {
           const similarData = snap.docs
             .map(d => ({ id: d.id, ...d.data() } as Listing))
@@ -352,7 +355,7 @@ export default function ListingDetail() {
                 <img src={seller.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seller.uid}`} alt="" className="w-16 h-16 rounded-full border-2 border-gold-500 group-hover:scale-105 transition-transform" />
                 <div>
                   <div className="flex items-center space-x-2">
-                    <h3 className="font-bold text-xl group-hover:underline">InstaNext.in User</h3>
+                    <h3 className="font-bold text-xl group-hover:underline">{seller.displayName}</h3>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
                     <div className="flex items-center text-gold-400">

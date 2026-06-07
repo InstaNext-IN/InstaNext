@@ -93,7 +93,7 @@ export default function Chat() {
 
   const handleReportUser = async () => {
     if (!user || !otherUser) return;
-    const reason = prompt(`Why are you reporting InstaNext.in User?`);
+    const reason = prompt(`Why are you reporting ${otherUser.displayName}?`);
     if (!reason) return;
     
     try {
@@ -112,7 +112,7 @@ export default function Chat() {
 
   const handleRateUser = async () => {
     if (!user || !otherUser) return;
-    const ratingStr = prompt(`Rate InstaNext.in User from 1 to 5 stars:`);
+    const ratingStr = prompt(`Rate ${otherUser.displayName} from 1 to 5 stars:`);
     if (!ratingStr) return;
     const rating = parseInt(ratingStr);
     if (isNaN(rating) || rating < 1 || rating > 5) {
@@ -189,7 +189,7 @@ export default function Chat() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <h2 className="font-bold">InstaNext.in User</h2>
+          <h2 className="font-bold">{otherUser?.displayName || "User"}</h2>
           {listing && <p className="text-xs text-teal-200 truncate">Re: {listing.title}</p>}
         </div>
         <div className="flex items-center space-x-2">
