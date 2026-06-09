@@ -70,31 +70,7 @@ export default function Sell() {
     }
   }, []);
 
-  const compressImage = async (blob: Blob): Promise<string> => {
-    // Fill white background for JPG first since background removal leaves it transparent
-    const fileWithWhiteBg = await new Promise<File>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject("Canvas context not available");
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob((b) => {
-          if (b) resolve(new File([b], "image.jpg", { type: "image/jpeg" }));
-          else reject("Failed to create blob");
-        }, "image/jpeg", 1.0);
-      };
-      img.onerror = reject;
-      img.src = URL.createObjectURL(blob);
-    });
-
+  const compressImage = async (blob: File): Promise<string> => {
     const options = {
       maxSizeMB: 0.098, // just under 100kb
       maxWidthOrHeight: 1280, // resize larger images to preserve quality over raw compression
@@ -103,7 +79,7 @@ export default function Sell() {
     };
 
     try {
-      const compressedFile = await imageCompression(fileWithWhiteBg, options);
+      const compressedFile = await imageCompression(blob, options);
       return await imageCompression.getDataUrlFromFile(compressedFile);
     } catch (error) {
       console.error("Compression error:", error);
@@ -173,6 +149,7 @@ export default function Sell() {
       setError("Failed to process some images. Please try different photos.");
     } finally {
       setProcessing(false);
+      e.target.value = "";
     }
   };
 
